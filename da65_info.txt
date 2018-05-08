@@ -8,40 +8,73 @@
         };
 
 
+		################################################################## TELEMON 
 
-	
+############################################################Page 0
+LABEL { NAME "RESB";   ADDR  $02; Size 2;  };
+LABEL { NAME "RES";    ADDR  $00; Size 2;  };	
+LABEL { NAME "DECDEB"; ADDR  $04; Size 2;  };	
+LABEL { NAME "DECFIN"; ADDR  $06; Size 2;  };	
+LABEL { NAME "DECCIB"; ADDR  $08; Size 2;  };	
+LABEL { NAME "DECTRV"; ADDR  $0A; Size 2;  };	
+LABEL { NAME "HRS1";   ADDR  $4D; Size 2;  };
+LABEL { NAME "VARLNG"; ADDR  $8c; SIZE 44; };	
+LABEL { NAME "VARAPL"; ADDR  $d0; SIZE 44; };	
+LABEL { NAME "TR0";    ADDR  $0c; SIZE 1;  };	
+LABEL { NAME "TR1";    ADDR  $0d; SIZE 1;  };	
+LABEL { NAME "TR2";    ADDR  $0e; SIZE 1;  };	
+LABEL { NAME "TR3";    ADDR  $0f; SIZE 1;  };	
+
+############################################################Page 2
+
+LABEL { NAME "FLGTEL"; ADDR  $020D; Size 1; };
+LABEL { NAME "SCRX";   ADDR  $0220; SIZE 1; };	
+LABEL { NAME "SCRDX";  ADDR  $0228; SIZE 1; };	
+LABEL { NAME "VNMI";   ADDR  $02F4; Size 2; };			
+LABEL { NAME "VAPLIC"; ADDR  $02FD; Size 2; };			
+
+############################################################Page 3
+		
+#VIA 1
+LABEL { NAME "V1DRB";  ADDR  $0300;  Size 1;  };
+LABEL { NAME "V1DRA";  ADDR  $0301;  Size 1;  };
+LABEL { NAME "V1DDRB"; ADDR  $0302;  Size 1;  };
+LABEL { NAME "V1DDRA"; ADDR  $0303;  Size 1;  };
+
+LABEL { NAME "V1T1";   ADDR  $0304;  Size 2;  };
+LABEL { NAME "V1T1L";  ADDR  $0306;  Size 2;  };
+LABEL { NAME "V1T2";   ADDR  $0308;  Size 2;  };
+
+LABEL { NAME "V1ACR";  ADDR  $030b;  Size 1;  };
+LABEL { NAME "V1PCR";  ADDR  $030c;  Size 1;  };
+LABEL { NAME "V1IFR";  ADDR  $030d;  Size 1;  };
+LABEL { NAME "V1ER";   ADDR  $030e;  Size 1;  };
+LABEL { NAME "V1DRAB"; ADDR  $030f;  Size 1;  };		
+
+
 #via2
 LABEL { NAME "V2DRA";     ADDR  $0321;   };
- 	
-# TELEMON 
-LABEL { NAME "FLGTEL";     ADDR  $020D;   };
-LABEL { NAME "RESB";     ADDR  $02;  Size 2;  };
-LABEL { NAME "RES";     ADDR  $00;  Size 2;  };	
 
-LABEL { NAME "DECDEB";     ADDR  $04;  Size 2;  };	
-LABEL { NAME "DECFIN";     ADDR  $06;  Size 2;  };	
-LABEL { NAME "DECCIB";     ADDR  $08;  Size 2;  };	
-LABEL { NAME "DECTRV";     ADDR  $0A;  Size 2;  };	
+############################################################Page 4
 
+LABEL { NAME "VEXBNK"; ADDR  $0414; SIZE 1;  };	
+LABEL { NAME "BNKCIB"; ADDR  $0417; SIZE 1;  };	
 
+############################################################Page 5
+
+LABEL { NAME "BUFNOM"; ADDR  $0517; SIZE 11; };	
+LABEL { NAME "BUFEDT"; ADDR  $0590; size 110;};	
 
 
+		
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-LABEL { NAME "VNMI";     ADDR  $02F4;  Size 2;  };			
-LABEL { NAME "VAPLIC";     ADDR  $02FD;  Size 2;  };			
-LABEL { NAME "BUFNOM";     ADDR  $517; SIZE 11;   };	
-LABEL { NAME "VARLNG";     ADDR  $8c; SIZE 44;   };	
-LABEL { NAME "VARAPL";     ADDR  $d0; SIZE 44;   };	
-LABEL { NAME "TR0";     ADDR  $0c; SIZE 1;   };	
-LABEL { NAME "TR1";     ADDR  $0d; SIZE 1;   };	
-LABEL { NAME "TR2";     ADDR  $0e; SIZE 1;   };	
-LABEL { NAME "TR3";     ADDR  $0f; SIZE 1;   };	
-LABEL { NAME "VEXBNK";     ADDR  $414; SIZE 1;   };	
-LABEL { NAME "BNKCIB";     ADDR  $417; SIZE 1;   };	
-LABEL { NAME "SCRX";     ADDR  $220; SIZE 1;   };	
-LABEL { NAME "SCRDX";     ADDR  $228; SIZE 1;   };	
 
-LABEL { NAME "BUFEDT";     ADDR  $590;size 110;};	
+		
+
+
+
+
 		
 		
 
@@ -50,7 +83,7 @@ RANGE { START $ef0a;  END   $F017;    TYPE Code;NAME "teleass_start";   COMMENT 
 		
 RANGE { START $f018;  END   $fa00;    TYPE TextTable; NAME "str_junk2";   COMMENT "X";  };	
 		
-		
+RANGE { START $D86F; END $D89F; TYPE TextTable; NAME "str_copyright"; COMMENT "X"; }; 		
 		
 		
 		
