@@ -1,5 +1,6 @@
         # This is a comment. It extends to the end of the line
         GLOBAL {
+            COMMENTS        3;
             OUTPUTNAME      "teleass_cc65.asm";
             INPUTNAME       "original/teleass.rom";
             STARTADDR       $C000;
@@ -8,33 +9,73 @@
         };
 
 
-		################################################################## TELEMON 
+		################################################################## TELEMON
 
 ############################################################Page 0
 LABEL { NAME "RESB";   ADDR  $02; Size 2;  };
-LABEL { NAME "RES";    ADDR  $00; Size 2;  };	
-LABEL { NAME "DECDEB"; ADDR  $04; Size 2;  };	
-LABEL { NAME "DECFIN"; ADDR  $06; Size 2;  };	
-LABEL { NAME "DECCIB"; ADDR  $08; Size 2;  };	
-LABEL { NAME "DECTRV"; ADDR  $0A; Size 2;  };	
+LABEL { NAME "RES";    ADDR  $00; Size 2;  };
+LABEL { NAME "DECDEB"; ADDR  $04; Size 2;  };
+LABEL { NAME "DECFIN"; ADDR  $06; Size 2;  };
+LABEL { NAME "DECCIB"; ADDR  $08; Size 2;  };
+LABEL { NAME "DECTRV"; ADDR  $0A; Size 2;  };
+LABEL { NAME "ADSCR";  ADDR  $26; Size 2;  };
+LABEL { NAME "HRSY";   ADDR  $47; Size 1;  };
+LABEL { NAME "XLPRBI"; ADDR  $48; Size 1; COMMENT "Printer flag (b7)"; };
+LABEL { NAME "HRSX40"; ADDR  $49; Size 1;  };
+LABEL { NAME "HRSX6";  ADDR  $4A; Size 1;  };
 LABEL { NAME "HRS1";   ADDR  $4D; Size 2;  };
-LABEL { NAME "VARLNG"; ADDR  $8c; SIZE 44; };	
-LABEL { NAME "VARAPL"; ADDR  $d0; SIZE 44; };	
-LABEL { NAME "TR0";    ADDR  $0c; SIZE 1;  };	
-LABEL { NAME "TR1";    ADDR  $0d; SIZE 1;  };	
-LABEL { NAME "TR2";    ADDR  $0e; SIZE 1;  };	
-LABEL { NAME "TR3";    ADDR  $0f; SIZE 1;  };	
+LABEL { NAME "HRS2";   ADDR  $4F; Size 2;  };
+LABEL { NAME "HRS3";   ADDR  $51; Size 2;  };
+LABEL { NAME "HRS4";   ADDR  $53; Size 2;  };
+LABEL { NAME "INDIC0";  ADDR  $55; Size 2; COMMENT "Also HRS5"; };
+LABEL { NAME "INDIC2"; ADDR  $57; Size 1; COMMENT "Also HRSFB"; };
+LABEL { NAME "SCEDEB"; ADDR  $5C; Size 2;  };
+LABEL { NAME "SCEFIN"; ADDR  $5E; Size 2;  };
+# LABEL { NAME "ACCPS";  ADDR  $6E; Size 1; COMMENT "Also XA2EA1"; };
+LABEL { NAME "VARLNG"; ADDR  $8c; SIZE 44; };
+
+#LABEL { NAME "VARAPL"; ADDR  $d0; SIZE 44+2?; };
+LABEL { NAME "VARAPL";  ADDR  $d0; SIZE 18; };
+#LABEL { NAME "CharGet"; ADDR  $E2; SIZE  6; };
+LABEL { NAME "CharGet"; ADDR  $E2; };
+#LABEL { NAME "CharGot"; ADDR  $E8; SIZE 11; };
+LABEL { NAME "CharGot"; ADDR  $E8; };
+LABEL { NAME "TXTPTR";  ADDR  $E9; SIZE  2; };
+LABEL { NAME "VARAPL2";  ADDR  $EB; SIZE 19; };
+
+LABEL { NAME "TR0";    ADDR  $0c; SIZE 1;  };
+LABEL { NAME "TR1";    ADDR  $0d; SIZE 1;  };
+LABEL { NAME "TR2";    ADDR  $0e; SIZE 1;  };
+LABEL { NAME "TR3";    ADDR  $0f; SIZE 1;  };
+LABEL { NAME "TR5";    ADDR  $11; Size 1;  };
+LABEL { NAME "TR6";    ADDR  $12; Size 1;  };
+LABEL { NAME "DEFAFF";    ADDR  $14; Size 1;  };
+
+############################################################Page 1
+# Stack
+LABEL { NAME "BUFTRV";   ADDR  $100;  SIZE 256;  };
 
 ############################################################Page 2
-
+LABEL { NAME "TABDRV"; ADDR  $0208; SIZE 4; };
 LABEL { NAME "FLGTEL"; ADDR  $020D; Size 1; };
-LABEL { NAME "SCRX";   ADDR  $0220; SIZE 1; };	
-LABEL { NAME "SCRDX";  ADDR  $0228; SIZE 1; };	
-LABEL { NAME "VNMI";   ADDR  $02F4; Size 2; };			
-LABEL { NAME "VAPLIC"; ADDR  $02FD; Size 2; };			
+LABEL { NAME "SCRX";   ADDR  $0220; SIZE 1; };
+LABEL { NAME "SCRY";   ADDR  $0224; SIZE 1; };
+LABEL { NAME "SCRDX";  ADDR  $0228; SIZE 1; };
+LABEL { NAME "SCRFX";  ADDR  $022C; SIZE 1; };
+LABEL { NAME "SCRDY";  ADDR  $0230; SIZE 1; };
+LABEL { NAME "SCRFY";  ADDR  $0234; SIZE 1; };
+LABEL { NAME "FLGSCR"; ADDR  $0248; SIZE 1; };
+LABEL { NAME "FLGKBD"; ADDR  $0275; SIZE 1; };
+LABEL { NAME "LPRX";   ADDR  $0286; SIZE 1; };
+LABEL { NAME "KBDSHT"; ADDR  $0278; SIZE 1; };
+LABEL { NAME "LPRY";   ADDR  $0287; SIZE 1; };
+LABEL { NAME "LPRFY";  ADDR  $0289; SIZE 1; COMMENT "Nombre de lignes par page pour l'imprimante"; };
+LABEL { NAME "LPRSY";  ADDR  $028B; SIZE 1; COMMENT "N° de ligne pour le saur de page"; };
+LABEL { NAME "VNMI";   ADDR  $02F4; Size 3; };
+LABEL { NAME "VAPLIC"; ADDR  $02FD; Size 2; };
 
 ############################################################Page 3
-		
+
 #VIA 1
 LABEL { NAME "V1DRB";  ADDR  $0300;  Size 1;  };
 LABEL { NAME "V1DRA";  ADDR  $0301;  Size 1;  };
@@ -49,65 +90,1771 @@ LABEL { NAME "V1ACR";  ADDR  $030b;  Size 1;  };
 LABEL { NAME "V1PCR";  ADDR  $030c;  Size 1;  };
 LABEL { NAME "V1IFR";  ADDR  $030d;  Size 1;  };
 LABEL { NAME "V1ER";   ADDR  $030e;  Size 1;  };
-LABEL { NAME "V1DRAB"; ADDR  $030f;  Size 1;  };		
+LABEL { NAME "V1DRAB"; ADDR  $030f;  Size 1;  };
 
 
 #via2
 LABEL { NAME "V2DRA";     ADDR  $0321;   };
 
 ############################################################Page 4
+LABEL { NAME "EXBNK";  ADDR  $040C;          };
+LABEL { NAME "VEXBNK"; ADDR  $0414; SIZE 3;  };
+LABEL { NAME "BNKCIB"; ADDR  $0417; SIZE 1;  };
 
-LABEL { NAME "VEXBNK"; ADDR  $0414; SIZE 1;  };	
-LABEL { NAME "BNKCIB"; ADDR  $0417; SIZE 1;  };	
+LABEL { ADDR $04E0; NAME "DEFBNK"; SIZE 1; COMMENT "Banque par défaut"; };
+###LABEL { ADDR $04E1; NAME "CURBNK"; SIZE 1; COMMENT "Banque par courante?"; };
+
+LABEL { NAME "Proc1"; ADDR $04E2; SIZE 12; COMMENT "Trouver un meilleur nom (cf $D101)"; };
+LABEL { NAME "Ptr1";  ADDR $04EE; SIZE 2 ; COMMENT "Trouver un meilleur nom"; };
+LABEL { NAME "Ptr2";  ADDR $04F0; SIZE 2 ; COMMENT "Trouver un meilleur nom"; };
+LABEL { ADDR $04f2; NAME "Flags"; COMMENT "b6: Trace";};
+###LABEL { ADDR $04f3; NAME ""; COMMENT ""; };
+LABEL { ADDR $04f4; NAME "Proc2"; SIZE 6; COMMENT "Copie de LEA0F-LEA14 (Trouver un meilleur nom)"; };
 
 ############################################################Page 5
 
-LABEL { NAME "BUFNOM"; ADDR  $0517; SIZE 11; };	
-LABEL { NAME "BUFEDT"; ADDR  $0590; size 110;};	
+LABEL { ADDR $0500; NAME "DRIVE"; SIZE 1; };
+LABEL { ADDR $0512; NAME "ERRNB"; SIZE 1; };
+LABEL { ADDR $0513; NAME "SAVES"; SIZE 1; };
+LABEL { NAME "BUFNOM"; ADDR  $0517; SIZE 11; };
+LABEL { ADDR $0528; NAME "VSALO0"; SIZE 1; };
+LABEL { ADDR $0529; NAME "VSALO1"; SIZE 1; };
+LABEL { ADDR $052C; NAME "FTYPE"; SIZE 1; };
+LABEL { ADDR $052D; NAME "INPIS"; SIZE 1; COMMENT "Also DESALO"; };
+LABEL { ADDR $052E; NAME "INSEC"; SIZE 1; };
+LABEL { ADDR $052F; NAME "PARPIS"; SIZE 1; };
+LABEL { ADDR $0530; NAME "PARSEC"; SIZE 1; };
+LABEL { ADDR $0531; NAME "EXSALO"; SIZE 2; };
+LABEL { ADDR $055D; NAME "EXTDEF"; SIZE 3; };
+LABEL { NAME "BUFEDT"; ADDR  $0590; size 110;};
 
 
-		
+
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+# (*) Adresses pour brk.sh
+LABEL { ADDR $c62b; NAME "Registers_str"; COMMENT "Messages divers"; };
+LABEL { ADDR $c6b5; NAME "Banque_str"; };
+LABEL { ADDR $c2c6; NAME "CommandsTable"; };
+LABEL { ADDR $ffc8; NAME "SymbolTableEnd"; };
+#LABEL { ADDR $f018; NAME "SymbolTable"; };
+LABEL { ADDR $c6e5; NAME "Menu_str"; };
+LABEL { ADDR $d0b4; NAME "Warm_start"; };
+LABEL { ADDR $c641; NAME "Source_str"; };
+LABEL { ADDR $c64f; NAME "Objet_str"; };
+#LABEL { ADDR $c684; NAME "Assemblage_str+1"; };
+LABEL { ADDR $c68f; NAME "O_N_str"; };
+LABEL { ADDR $c65d; NAME "Symboles_str"; };
+LABEL { ADDR $c66b; NAME "Locaux_str"; };
+LABEL { ADDR $c672; NAME "Globaux_str"; };
+LABEL { ADDR $c67a; NAME "Moniteur_str"; };
+LABEL { ADDR $c6c6; NAME "Fmt_str"; };
+LABEL { ADDR $c6cb; NAME "Saut_str"; };
+LABEL { ADDR $c6d1; NAME "Ligne_str"; };
+LABEL { ADDR $c6af; NAME "Pile_str"; };
+#LABEL { ADDR $e9e8; NAME "Chan0InitTbl"; };
+#LABEL { ADDR $e9ee; NAME "Chan1InitTbl"; };
+#LABEL { ADDR $e9f4; NAME "Chan2InitTbl"; };
+#LABEL { ADDR $e9fa; NAME "Chan0bInitTbl"; };
+LABEL { ADDR $c69e; NAME "PasPas_str"; };
+LABEL { ADDR $c6a9; NAME "Exec_str"; };
+LABEL { ADDR $c697; NAME "Trace_str"; };
+LABEL { ADDR $c683; NAME "Assemblage_str"; };
+LABEL { ADDR $c6d8; NAME "Occurences_str"; };
+LABEL { ADDR $c6be; NAME "MAJ_min_str"; };
 
-		
+
+
+RANGE { START $c003; END $c0aa; TYPE TextTable; NAME "Mnemonics";     COMMENT "Mnemonics"; };
+RANGE { START $c0ab; END $c0c5; TYPE TextTable; NAME "PseudoOps";     COMMENT "Pseudo Operations"; };
+
+RANGE { START $c0c6; END $c1c5; TYPE ByteTable; NAME "Oplen";         COMMENT "Oplen"; };
+RANGE { START $c1c6; END $c2c5; TYPE ByteTable; NAME "Opmode";        COMMENT "Opmode"; };
+RANGE { START $c2c6; END $c3c6; TYPE TextTable; NAME "CommandsTable"; COMMENT "Commands"; };
+RANGE { START $c3c7; END $c432; TYPE RTSTable;  NAME "CommandsAddr";  COMMENT "Commands Addresses"; };
+
+RANGE { START $c433; END $c62a; TYPE TextTable; NAME "ErrMsgs";       COMMENT "Error Messages"; };
+RANGE { START $c62b; END $c715; TYPE TextTable;                       COMMENT "Status Messages"; };
+
+LABEL { ADDR $c72c; NAME "DispYSpace"; COMMENT "Display Y spaces"; };
+LABEL { ADDR $c735; NAME "DispSpace";  COMMENT "Display a space"; };
+LABEL { ADDR $c73a; NAME "DispRegs";   COMMENT "Display 6502 registers"; };
+LABEL { ADDR $c77c; NAME "DispString"; COMMENT "Display string from bottom of the stack"; };
+LABEL { ADDR $c78d; NAME "DispWord";   COMMENT "Display hexa word from bottom of the stack"; };
+LABEL { ADDR $c792; NAME "DispByte";   COMMENT "Display hexa byte from bottom of the stack"; };
+LABEL { ADDR $c7a1; NAME "DispBitStr"; COMMENT "Display bit string representation of ACC"; };
+LABEL { ADDR $c7cd; NAME "PutYAHexa";  COMMENT "Put hexa string representation of YA at bottom of the stack"; };
+LABEL { ADDR $c7d9; NAME "PutHexa";    COMMENT "Put hexa string representation of ACC at bottom of the stack"; };
+LABEL { ADDR $c7ed; NAME "PushHexa";   COMMENT "Append hexa string representation of ACC at bottom of the stack"; };
+LABEL { ADDR $c7fe; NAME "PutBitStr";  COMMENT "Put bit string representation of ACC at bottom of the stack"; };
+
+LABEL { ADDR $c81b; NAME "DispErrorX"; COMMENT "Display error number X"; };
+LABEL { ADDR $c8f5; NAME "DispBank";   COMMENT "Display 'Banque ' + bank number ACC"; };
+
+LABEL { ADDR $ca3a; NAME "PutMnemo";  COMMENT "Put mnemonic number ACC at bottom of the stack"; };
+LABEL { ADDR $ca64; NAME "DecodeOpc"; COMMENT "Decode opcode in ACC"; };
+
+LABEL { ADDR $cde5; NAME "LocSymLookup";  COMMENT "Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
+LABEL { ADDR $ce4b; NAME "GlobSymLookup"; COMMENT "Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
+LABEL { ADDR $ce61; NAME "MonSymLookup";  COMMENT "Find symbol in monitor symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
+LABEL { ADDR $ce77; NAME "SymLookup";     COMMENT "Find symbol in global, local, monitor symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
+
+LABEL { ADDR $CE85; NAME "IncTXTPTR"; COMMENT "Add Y to TXTPTR"; };
+LABEL { ADDR $ce90; NAME "LCE90"; };
+
+#
+# ATTENTION Labels en double
+#
+LABEL { ADDR $cefe; NAME "SyntaxErr";         COMMENT "Err $00"; };
+LABEL { ADDR $cf03; NAME "OutOfRangeValErr";  COMMENT "Err $0C"; };
+LABEL { ADDR $d19e; NAME "DriveErr";          COMMENT "Err $0A"; };
+LABEL { ADDR $d1a1; NAME "SyntaxErr1";         COMMENT "Err $00"; };
+LABEL { ADDR $d1a4; NAME "FileNameErr";       COMMENT "Err $09"; };
+LABEL { ADDR $d1a7; NAME "WildCardErr";       COMMENT "Err $18"; };
+LABEL { ADDR $d360; NAME "SyntaxErr2";         COMMENT "Err $00"; };
+LABEL { ADDR $d363; NAME "IllegalValErr";     COMMENT "Err $0B"; };
+LABEL { ADDR $d4ef; NAME "UnknSymErr";        COMMENT "Err $11"; };
+LABEL { ADDR $d5da; NAME "SyntaxErr3";         COMMENT "Err $00"; };
+LABEL { ADDR $d732; NAME "WildCardErr1";       COMMENT "Err $18"; };
+LABEL { ADDR $d799; NAME "SyntaxErr4";         COMMENT "Err $00"; };
+LABEL { ADDR $d79c; NAME "FileNameErr1";       COMMENT "Err $09"; };
+LABEL { ADDR $d83d; NAME "SyntaxErr5";         COMMENT "Err $00"; };
+LABEL { ADDR $d840; NAME "IllegalValErr2";     COMMENT "Err $0B"; };
+LABEL { ADDR $d843; NAME "OutOfRangeValErr1";  COMMENT "Err $0C"; };
+LABEL { ADDR $d846; NAME "MemFullErr";        COMMENT "Err $0D"; };
+LABEL { ADDR $d849; NAME "IllegalLabErr";     COMMENT "Err $0F (inutilisé?)"; };
+LABEL { ADDR $d84c; NAME "LabelDefErr";       COMMENT "Err $10"; };
+LABEL { ADDR $d84f; NAME "OrgDefErr";         COMMENT "Err $15"; };
+LABEL { ADDR $d852; NAME "UnknSymErr1";        COMMENT "Err $11 (inutilisé?)"; };
+LABEL { ADDR $d855; NAME "OutOfRangeBraErr2";  COMMENT "Err $12"; };
+LABEL { ADDR $d858; NAME "IllegalAddrModErr"; COMMENT "Err $13"; };
+LABEL { ADDR $d85b; NAME "UnknOrgErr";        COMMENT "Err $14"; };
+LABEL { ADDR $e405; NAME "PrinterFormatErr";  COMMENT "Err $1A"; };
+LABEL { ADDR $e54c; NAME "FileNameErr2";       COMMENT "Err $09"; };
+LABEL { ADDR $e54f; NAME "SyntaxErr6";         COMMENT "Err $00"; };
+LABEL { ADDR $ed90; NAME "IllegalLabErr2";     COMMENT "Err $0F"; };
+LABEL { ADDR $ed93; NAME "SyntaxErr7";         COMMENT "Err $00"; };
+LABEL { ADDR $ef28; NAME "SyntaxErr8";         COMMENT "Err $00"; };
+
+
+
+LABEL { ADDR $cf53; NAME "SetTXTPTR"; COMMENT "Set TXTPTR := BUFEDT+X"; };
+LABEL { ADDR $cf73; NAME "LocTblInit"; COMMENT "Initialise les pointeurs de la table des symboles locaux"; };
+
+# Pour un brk nn
+#RANGE { START $d075; END $d075; TYPE ByteTable; };
+#RANGE { START $d076; END $d078; TYPE Code; };
+
+LABEL { ADDR $d000; NAME "ExecCmd";         COMMENT "Execute command number ACC"; };
+LABEL { ADDR $d061; NAME "QUIT"; };
+LABEL { ADDR $d070; NAME "teleass_start";   COMMENT "teleass_start";  };
+
+LABEL { NAME "_CharGet"; ADDR $D0F0; COMMENT "Prends le caractère suivant en sautant les espaces (Copié en VARAPL+18)"; };
+LABEL { NAME "_CharGot"; ADDR $D0F6; COMMENT "Prends le caractère courant"; };
+LABEL { NAME "_Proc1";   ADDR $D101; COMMENT "Trouver un meilleur nom (cf $04E2)"; };
+LABEL { ADDR $d120;      NAME "Clear"; COMMENT "Efface le programme et initialise les pointeurs de la table des symboles locaux"; };
+
+# Points d'entrée des commandes
+LABEL { ADDR $d1c8; NAME "LOAD"; };
+
+LABEL { ADDR $d25e; NAME "EXBNK0ERR"; COMMENT "Exécute une routine en banque 0 et affiche le code d'erreur"; };
+LABEL { ADDR $d28a; NAME "EXBNK0";    COMMENT "Exécute une routine en banque 0 (adresse en AY)"; };
+
+LABEL { ADDR $D2B9; NAME "DESAS"; };
+LABEL { ADDR $D2BC; NAME "LDESAS"; };
+LABEL { ADDR $D2D0; NAME "DUMP"; };
+LABEL { ADDR $D2D3; NAME "LDUMP"; };
+LABEL { ADDR $D54B; NAME "LIST"; };
+LABEL { ADDR $D550; NAME "LLIST"; };
+LABEL { ADDR $D589; NAME "RENUM"; };
+LABEL { ADDR $D68E; NAME "DIR"; };
+LABEL { ADDR $D691; NAME "LDIR"; };
+LABEL { ADDR $D6B2; NAME "SAVEU"; };
+LABEL { ADDR $D6B5; NAME "SAVEO"; };
+LABEL { ADDR $D6B8; NAME "SAVEM"; };
+LABEL { ADDR $D6AF; NAME "SAVE"; };
+
+LABEL { ADDR $d77b; NAME "GetEXTparam"; };
+LABEL { ADDR $d7a1; NAME "SetEXT"; };
+
+LABEL { ADDR $DC07; NAME "ASSEM"; };
+LABEL { ADDR $DC0A; NAME "LASSEM"; };
+
+LABEL { ADDR $df0a; NAME "DispLocSym";  COMMENT "C65D 'Symboles :'/ C66B 'locaux'"; };
+LABEL { ADDR $df31; NAME "DispGlobSym"; COMMENT "C65D 'Symboles :'/ C672 'globaux'"; };
+LABEL { ADDR $df58; NAME "DispMonSym";  COMMENT "C65D 'Symboles :'/ C67A 'moniteur'"; };
+LABEL { ADDR $df7c; NAME "DispSymTbl";  COMMENT "VARAPL+12: Adr debut de la table, VARAPL+1: Finde la table"; };
+
+LABEL { ADDR $E037; NAME "SYOLD"; };
+LABEL { ADDR $E059; NAME "SYDEF"; };
+LABEL { ADDR $E15F; NAME "SYTAB"; };
+LABEL { ADDR $E162; NAME "LSYTAB"; };
+LABEL { ADDR $E7E8; NAME "MODIF"; };
+LABEL { ADDR $E1D0; NAME "QDEC"; };
+LABEL { ADDR $E1FC; NAME "QHEX"; };
+LABEL { ADDR $E1DF; NAME "QBIN"; };
+LABEL { ADDR $E219; NAME "QCAR"; };
+LABEL { ADDR $E258; NAME "VREG"; };
+LABEL { ADDR $EA15; NAME "TRACE"; };
+LABEL { ADDR $E40A; NAME "MOVE"; };
+LABEL { ADDR $D758; NAME "DELBAK"; };
+LABEL { ADDR $D63D; NAME "DELETE"; };
+LABEL { ADDR $D73A; NAME "DEL"; };
+LABEL { ADDR $E50A; NAME "MERGE"; };
+
+LABEL { ADDR $E9E8; NAME "Chan0InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 0"; };
+LABEL { ADDR $E9EE; NAME "Chan1InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 1"; };
+LABEL { ADDR $E9F4; NAME "Chan2InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 2"; };
+LABEL { ADDR $E9FA; NAME "Chan0bInitTbl"; SIZE 6; COMMENT "Table d'initialisation écran 0 bis"; };
+LABEL { ADDR $EA00; NAME "Table1";        SIZE 3; COMMENT "Trouver un meilleur nom"; };
+
+LABEL { ADDR $EE94; NAME "SEEK"; };
+LABEL { ADDR $EF4A; NAME "CHANGE"; };
+LABEL { ADDR $E2A2; NAME "OLD"; };
+LABEL { ADDR $D135; NAME "NEW"; };
+LABEL { ADDR $D32C; NAME "BANK"; };
+LABEL { ADDR $E2E3; NAME "CALL"; };
+LABEL { ADDR $D765; NAME "EXT"; };
+LABEL { ADDR $E334; NAME "BYTE"; };
+LABEL { ADDR $ED14; NAME "MINAS"; };
+LABEL { ADDR $D7C1; NAME "BACKUP"; };
+LABEL { ADDR $D7DB; NAME "INIT"; };
+LABEL { ADDR $E37E; NAME "DPAGE"; };
+LABEL { ADDR $E38D; NAME "FPAGE"; };
+LABEL { ADDR $E365; NAME "SLIGNE"; };
+LABEL { ADDR $E554; NAME "QWERTY"; };
+LABEL { ADDR $E557; NAME "AZERTY"; };
+LABEL { ADDR $E55A; NAME "FRENCH"; };
+LABEL { ADDR $E55D; NAME "ACCSET"; };
+LABEL { ADDR $E560; NAME "ACCOFF"; };
+LABEL { ADDR $F005; NAME "TEXT"; };
+LABEL { ADDR $F00D; NAME "HIRES"; };
 
 
 
 
-		
-		
+##############
+# Symbols table
+##############
+#RANGE { START $f018; END $ffc8; TYPE TextTable; NAME "Labels"; COMMENT "Labels"; };
+LABEL { ADDR $F018; NAME "SymbolTable"; };
+
+RANGE { START $F018; END $F01D; TYPE TextTable; };
+RANGE { START $F01E; END $F01F; TYPE WordTable; };
+
+RANGE { START $F020; END $F025; TYPE TextTable; };
+RANGE { START $F026; END $F027; TYPE WordTable; };
+
+RANGE { START $F028; END $F02D; TYPE TextTable; };
+RANGE { START $F02E; END $F02F; TYPE WordTable; };
+
+RANGE { START $F030; END $F035; TYPE TextTable; };
+RANGE { START $F036; END $F037; TYPE WordTable; };
+
+RANGE { START $F038; END $F03D; TYPE TextTable; };
+RANGE { START $F03E; END $F03F; TYPE WordTable; };
+
+RANGE { START $F040; END $F045; TYPE TextTable; };
+RANGE { START $F046; END $F047; TYPE WordTable; };
+
+RANGE { START $F048; END $F04D; TYPE TextTable; };
+RANGE { START $F04E; END $F04F; TYPE WordTable; };
+
+RANGE { START $F050; END $F055; TYPE TextTable; };
+RANGE { START $F056; END $F057; TYPE WordTable; };
+
+RANGE { START $F058; END $F05D; TYPE TextTable; };
+RANGE { START $F05E; END $F05F; TYPE WordTable; };
+
+RANGE { START $F060; END $F065; TYPE TextTable; };
+RANGE { START $F066; END $F067; TYPE WordTable; };
+
+RANGE { START $F068; END $F06D; TYPE TextTable; };
+RANGE { START $F06E; END $F06F; TYPE WordTable; };
+
+RANGE { START $F070; END $F075; TYPE TextTable; };
+RANGE { START $F076; END $F077; TYPE WordTable; };
+
+RANGE { START $F078; END $F07D; TYPE TextTable; };
+RANGE { START $F07E; END $F07F; TYPE WordTable; };
+
+RANGE { START $F080; END $F085; TYPE TextTable; };
+RANGE { START $F086; END $F087; TYPE WordTable; };
+
+RANGE { START $F088; END $F08D; TYPE TextTable; };
+RANGE { START $F08E; END $F08F; TYPE WordTable; };
+
+RANGE { START $F090; END $F095; TYPE TextTable; };
+RANGE { START $F096; END $F097; TYPE WordTable; };
+
+RANGE { START $F098; END $F09D; TYPE TextTable; };
+RANGE { START $F09E; END $F09F; TYPE WordTable; };
+
+RANGE { START $F0A0; END $F0A5; TYPE TextTable; };
+RANGE { START $F0A6; END $F0A7; TYPE WordTable; };
+
+RANGE { START $F0A8; END $F0AD; TYPE TextTable; };
+RANGE { START $F0AE; END $F0AF; TYPE WordTable; };
+
+RANGE { START $F0B0; END $F0B5; TYPE TextTable; };
+RANGE { START $F0B6; END $F0B7; TYPE WordTable; };
+
+RANGE { START $F0B8; END $F0BD; TYPE TextTable; };
+RANGE { START $F0BE; END $F0BF; TYPE WordTable; };
+
+RANGE { START $F0C0; END $F0C5; TYPE TextTable; };
+RANGE { START $F0C6; END $F0C7; TYPE WordTable; };
+
+RANGE { START $F0C8; END $F0CD; TYPE TextTable; };
+RANGE { START $F0CE; END $F0CF; TYPE WordTable; };
+
+RANGE { START $F0D0; END $F0D5; TYPE TextTable; };
+RANGE { START $F0D6; END $F0D7; TYPE WordTable; };
+
+RANGE { START $F0D8; END $F0DD; TYPE TextTable; };
+RANGE { START $F0DE; END $F0DF; TYPE WordTable; };
+
+RANGE { START $F0E0; END $F0E5; TYPE TextTable; };
+RANGE { START $F0E6; END $F0E7; TYPE WordTable; };
+
+RANGE { START $F0E8; END $F0ED; TYPE TextTable; };
+RANGE { START $F0EE; END $F0EF; TYPE WordTable; };
+
+RANGE { START $F0F0; END $F0F5; TYPE TextTable; };
+RANGE { START $F0F6; END $F0F7; TYPE WordTable; };
+
+RANGE { START $F0F8; END $F0FD; TYPE TextTable; };
+RANGE { START $F0FE; END $F0FF; TYPE WordTable; };
+
+RANGE { START $F100; END $F105; TYPE TextTable; };
+RANGE { START $F106; END $F107; TYPE WordTable; };
+
+RANGE { START $F108; END $F10D; TYPE TextTable; };
+RANGE { START $F10E; END $F10F; TYPE WordTable; };
+
+RANGE { START $F110; END $F115; TYPE TextTable; };
+RANGE { START $F116; END $F117; TYPE WordTable; };
+
+RANGE { START $F118; END $F11D; TYPE TextTable; };
+RANGE { START $F11E; END $F11F; TYPE WordTable; };
+
+RANGE { START $F120; END $F125; TYPE TextTable; };
+RANGE { START $F126; END $F127; TYPE WordTable; };
+
+RANGE { START $F128; END $F12D; TYPE TextTable; };
+RANGE { START $F12E; END $F12F; TYPE WordTable; };
+
+RANGE { START $F130; END $F135; TYPE TextTable; };
+RANGE { START $F136; END $F137; TYPE WordTable; };
+
+RANGE { START $F138; END $F13D; TYPE TextTable; };
+RANGE { START $F13E; END $F13F; TYPE WordTable; };
+
+RANGE { START $F140; END $F145; TYPE TextTable; };
+RANGE { START $F146; END $F147; TYPE WordTable; };
+
+RANGE { START $F148; END $F14D; TYPE TextTable; };
+RANGE { START $F14E; END $F14F; TYPE WordTable; };
+
+RANGE { START $F150; END $F155; TYPE TextTable; };
+RANGE { START $F156; END $F157; TYPE WordTable; };
+
+RANGE { START $F158; END $F15D; TYPE TextTable; };
+RANGE { START $F15E; END $F15F; TYPE WordTable; };
+
+RANGE { START $F160; END $F165; TYPE TextTable; };
+RANGE { START $F166; END $F167; TYPE WordTable; };
+
+RANGE { START $F168; END $F16D; TYPE TextTable; };
+RANGE { START $F16E; END $F16F; TYPE WordTable; };
+
+RANGE { START $F170; END $F175; TYPE TextTable; };
+RANGE { START $F176; END $F177; TYPE WordTable; };
+
+RANGE { START $F178; END $F17D; TYPE TextTable; };
+RANGE { START $F17E; END $F17F; TYPE WordTable; };
+
+RANGE { START $F180; END $F185; TYPE TextTable; };
+RANGE { START $F186; END $F187; TYPE WordTable; };
+
+RANGE { START $F188; END $F18D; TYPE TextTable; };
+RANGE { START $F18E; END $F18F; TYPE WordTable; };
+
+RANGE { START $F190; END $F195; TYPE TextTable; };
+RANGE { START $F196; END $F197; TYPE WordTable; };
+
+RANGE { START $F198; END $F19D; TYPE TextTable; };
+RANGE { START $F19E; END $F19F; TYPE WordTable; };
+
+RANGE { START $F1A0; END $F1A5; TYPE TextTable; };
+RANGE { START $F1A6; END $F1A7; TYPE WordTable; };
+
+RANGE { START $F1A8; END $F1AD; TYPE TextTable; };
+RANGE { START $F1AE; END $F1AF; TYPE WordTable; };
+
+RANGE { START $F1B0; END $F1B5; TYPE TextTable; };
+RANGE { START $F1B6; END $F1B7; TYPE WordTable; };
+
+RANGE { START $F1B8; END $F1BD; TYPE TextTable; };
+RANGE { START $F1BE; END $F1BF; TYPE WordTable; };
+
+RANGE { START $F1C0; END $F1C5; TYPE TextTable; };
+RANGE { START $F1C6; END $F1C7; TYPE WordTable; };
+
+RANGE { START $F1C8; END $F1CD; TYPE TextTable; };
+RANGE { START $F1CE; END $F1CF; TYPE WordTable; };
+
+RANGE { START $F1D0; END $F1D5; TYPE TextTable; };
+RANGE { START $F1D6; END $F1D7; TYPE WordTable; };
+
+RANGE { START $F1D8; END $F1DD; TYPE TextTable; };
+RANGE { START $F1DE; END $F1DF; TYPE WordTable; };
+
+RANGE { START $F1E0; END $F1E5; TYPE TextTable; };
+RANGE { START $F1E6; END $F1E7; TYPE WordTable; };
+
+RANGE { START $F1E8; END $F1ED; TYPE TextTable; };
+RANGE { START $F1EE; END $F1EF; TYPE WordTable; };
+
+RANGE { START $F1F0; END $F1F5; TYPE TextTable; };
+RANGE { START $F1F6; END $F1F7; TYPE WordTable; };
+
+RANGE { START $F1F8; END $F1FD; TYPE TextTable; };
+RANGE { START $F1FE; END $F1FF; TYPE WordTable; };
+
+RANGE { START $F200; END $F205; TYPE TextTable; };
+RANGE { START $F206; END $F207; TYPE WordTable; };
+
+RANGE { START $F208; END $F20D; TYPE TextTable; };
+RANGE { START $F20E; END $F20F; TYPE WordTable; };
+
+RANGE { START $F210; END $F215; TYPE TextTable; };
+RANGE { START $F216; END $F217; TYPE WordTable; };
+
+RANGE { START $F218; END $F21D; TYPE TextTable; };
+RANGE { START $F21E; END $F21F; TYPE WordTable; };
+
+RANGE { START $F220; END $F225; TYPE TextTable; };
+RANGE { START $F226; END $F227; TYPE WordTable; };
+
+RANGE { START $F228; END $F22D; TYPE TextTable; };
+RANGE { START $F22E; END $F22F; TYPE WordTable; };
+
+RANGE { START $F230; END $F235; TYPE TextTable; };
+RANGE { START $F236; END $F237; TYPE WordTable; };
+
+RANGE { START $F238; END $F23D; TYPE TextTable; };
+RANGE { START $F23E; END $F23F; TYPE WordTable; };
+
+RANGE { START $F240; END $F245; TYPE TextTable; };
+RANGE { START $F246; END $F247; TYPE WordTable; };
+
+RANGE { START $F248; END $F24D; TYPE TextTable; };
+RANGE { START $F24E; END $F24F; TYPE WordTable; };
+
+RANGE { START $F250; END $F255; TYPE TextTable; };
+RANGE { START $F256; END $F257; TYPE WordTable; };
+
+RANGE { START $F258; END $F25D; TYPE TextTable; };
+RANGE { START $F25E; END $F25F; TYPE WordTable; };
+
+RANGE { START $F260; END $F265; TYPE TextTable; };
+RANGE { START $F266; END $F267; TYPE WordTable; };
+
+RANGE { START $F268; END $F26D; TYPE TextTable; };
+RANGE { START $F26E; END $F26F; TYPE WordTable; };
+
+RANGE { START $F270; END $F275; TYPE TextTable; };
+RANGE { START $F276; END $F277; TYPE WordTable; };
+
+RANGE { START $F278; END $F27D; TYPE TextTable; };
+RANGE { START $F27E; END $F27F; TYPE WordTable; };
+
+RANGE { START $F280; END $F285; TYPE TextTable; };
+RANGE { START $F286; END $F287; TYPE WordTable; };
+
+RANGE { START $F288; END $F28D; TYPE TextTable; };
+RANGE { START $F28E; END $F28F; TYPE WordTable; };
+
+RANGE { START $F290; END $F295; TYPE TextTable; };
+RANGE { START $F296; END $F297; TYPE WordTable; };
+
+RANGE { START $F298; END $F29D; TYPE TextTable; };
+RANGE { START $F29E; END $F29F; TYPE WordTable; };
+
+RANGE { START $F2A0; END $F2A5; TYPE TextTable; };
+RANGE { START $F2A6; END $F2A7; TYPE WordTable; };
+
+RANGE { START $F2A8; END $F2AD; TYPE TextTable; };
+RANGE { START $F2AE; END $F2AF; TYPE WordTable; };
+
+RANGE { START $F2B0; END $F2B5; TYPE TextTable; };
+RANGE { START $F2B6; END $F2B7; TYPE WordTable; };
+
+RANGE { START $F2B8; END $F2BD; TYPE TextTable; };
+RANGE { START $F2BE; END $F2BF; TYPE WordTable; };
+
+RANGE { START $F2C0; END $F2C5; TYPE TextTable; };
+RANGE { START $F2C6; END $F2C7; TYPE WordTable; };
+
+RANGE { START $F2C8; END $F2CD; TYPE TextTable; };
+RANGE { START $F2CE; END $F2CF; TYPE WordTable; };
+
+RANGE { START $F2D0; END $F2D5; TYPE TextTable; };
+RANGE { START $F2D6; END $F2D7; TYPE WordTable; };
+
+RANGE { START $F2D8; END $F2DD; TYPE TextTable; };
+RANGE { START $F2DE; END $F2DF; TYPE WordTable; };
+
+RANGE { START $F2E0; END $F2E5; TYPE TextTable; };
+RANGE { START $F2E6; END $F2E7; TYPE WordTable; };
+
+RANGE { START $F2E8; END $F2ED; TYPE TextTable; };
+RANGE { START $F2EE; END $F2EF; TYPE WordTable; };
+
+RANGE { START $F2F0; END $F2F5; TYPE TextTable; };
+RANGE { START $F2F6; END $F2F7; TYPE WordTable; };
+
+RANGE { START $F2F8; END $F2FD; TYPE TextTable; };
+RANGE { START $F2FE; END $F2FF; TYPE WordTable; };
+
+RANGE { START $F300; END $F305; TYPE TextTable; };
+RANGE { START $F306; END $F307; TYPE WordTable; };
+
+RANGE { START $F308; END $F30D; TYPE TextTable; };
+RANGE { START $F30E; END $F30F; TYPE WordTable; };
+
+RANGE { START $F310; END $F315; TYPE TextTable; };
+RANGE { START $F316; END $F317; TYPE WordTable; };
+
+RANGE { START $F318; END $F31D; TYPE TextTable; };
+RANGE { START $F31E; END $F31F; TYPE WordTable; };
+
+RANGE { START $F320; END $F325; TYPE TextTable; };
+RANGE { START $F326; END $F327; TYPE WordTable; };
+
+RANGE { START $F328; END $F32D; TYPE TextTable; };
+RANGE { START $F32E; END $F32F; TYPE WordTable; };
+
+RANGE { START $F330; END $F335; TYPE TextTable; };
+RANGE { START $F336; END $F337; TYPE WordTable; };
+
+RANGE { START $F338; END $F33D; TYPE TextTable; };
+RANGE { START $F33E; END $F33F; TYPE WordTable; };
+
+RANGE { START $F340; END $F345; TYPE TextTable; };
+RANGE { START $F346; END $F347; TYPE WordTable; };
+
+RANGE { START $F348; END $F34D; TYPE TextTable; };
+RANGE { START $F34E; END $F34F; TYPE WordTable; };
+
+RANGE { START $F350; END $F355; TYPE TextTable; };
+RANGE { START $F356; END $F357; TYPE WordTable; };
+
+RANGE { START $F358; END $F35D; TYPE TextTable; };
+RANGE { START $F35E; END $F35F; TYPE WordTable; };
+
+RANGE { START $F360; END $F365; TYPE TextTable; };
+RANGE { START $F366; END $F367; TYPE WordTable; };
+
+RANGE { START $F368; END $F36D; TYPE TextTable; };
+RANGE { START $F36E; END $F36F; TYPE WordTable; };
+
+RANGE { START $F370; END $F375; TYPE TextTable; };
+RANGE { START $F376; END $F377; TYPE WordTable; };
+
+RANGE { START $F378; END $F37D; TYPE TextTable; };
+RANGE { START $F37E; END $F37F; TYPE WordTable; };
+
+RANGE { START $F380; END $F385; TYPE TextTable; };
+RANGE { START $F386; END $F387; TYPE WordTable; };
+
+RANGE { START $F388; END $F38D; TYPE TextTable; };
+RANGE { START $F38E; END $F38F; TYPE WordTable; };
+
+RANGE { START $F390; END $F395; TYPE TextTable; };
+RANGE { START $F396; END $F397; TYPE WordTable; };
+
+RANGE { START $F398; END $F39D; TYPE TextTable; };
+RANGE { START $F39E; END $F39F; TYPE WordTable; };
+
+RANGE { START $F3A0; END $F3A5; TYPE TextTable; };
+RANGE { START $F3A6; END $F3A7; TYPE WordTable; };
+
+RANGE { START $F3A8; END $F3AD; TYPE TextTable; };
+RANGE { START $F3AE; END $F3AF; TYPE WordTable; };
+
+RANGE { START $F3B0; END $F3B5; TYPE TextTable; };
+RANGE { START $F3B6; END $F3B7; TYPE WordTable; };
+
+RANGE { START $F3B8; END $F3BD; TYPE TextTable; };
+RANGE { START $F3BE; END $F3BF; TYPE WordTable; };
+
+RANGE { START $F3C0; END $F3C5; TYPE TextTable; };
+RANGE { START $F3C6; END $F3C7; TYPE WordTable; };
+
+RANGE { START $F3C8; END $F3CD; TYPE TextTable; };
+RANGE { START $F3CE; END $F3CF; TYPE WordTable; };
+
+RANGE { START $F3D0; END $F3D5; TYPE TextTable; };
+RANGE { START $F3D6; END $F3D7; TYPE WordTable; };
+
+RANGE { START $F3D8; END $F3DD; TYPE TextTable; };
+RANGE { START $F3DE; END $F3DF; TYPE WordTable; };
+
+RANGE { START $F3E0; END $F3E5; TYPE TextTable; };
+RANGE { START $F3E6; END $F3E7; TYPE WordTable; };
+
+RANGE { START $F3E8; END $F3ED; TYPE TextTable; };
+RANGE { START $F3EE; END $F3EF; TYPE WordTable; };
+
+RANGE { START $F3F0; END $F3F5; TYPE TextTable; };
+RANGE { START $F3F6; END $F3F7; TYPE WordTable; };
+
+RANGE { START $F3F8; END $F3FD; TYPE TextTable; };
+RANGE { START $F3FE; END $F3FF; TYPE WordTable; };
+
+RANGE { START $F400; END $F405; TYPE TextTable; };
+RANGE { START $F406; END $F407; TYPE WordTable; };
+
+RANGE { START $F408; END $F40D; TYPE TextTable; };
+RANGE { START $F40E; END $F40F; TYPE WordTable; };
+
+RANGE { START $F410; END $F415; TYPE TextTable; };
+RANGE { START $F416; END $F417; TYPE WordTable; };
+
+RANGE { START $F418; END $F41D; TYPE TextTable; };
+RANGE { START $F41E; END $F41F; TYPE WordTable; };
+
+RANGE { START $F420; END $F425; TYPE TextTable; };
+RANGE { START $F426; END $F427; TYPE WordTable; };
+
+RANGE { START $F428; END $F42D; TYPE TextTable; };
+RANGE { START $F42E; END $F42F; TYPE WordTable; };
+
+RANGE { START $F430; END $F435; TYPE TextTable; };
+RANGE { START $F436; END $F437; TYPE WordTable; };
+
+RANGE { START $F438; END $F43D; TYPE TextTable; };
+RANGE { START $F43E; END $F43F; TYPE WordTable; };
+
+RANGE { START $F440; END $F445; TYPE TextTable; };
+RANGE { START $F446; END $F447; TYPE WordTable; };
+
+RANGE { START $F448; END $F44D; TYPE TextTable; };
+RANGE { START $F44E; END $F44F; TYPE WordTable; };
+
+RANGE { START $F450; END $F455; TYPE TextTable; };
+RANGE { START $F456; END $F457; TYPE WordTable; };
+
+RANGE { START $F458; END $F45D; TYPE TextTable; };
+RANGE { START $F45E; END $F45F; TYPE WordTable; };
+
+RANGE { START $F460; END $F465; TYPE TextTable; };
+RANGE { START $F466; END $F467; TYPE WordTable; };
+
+RANGE { START $F468; END $F46D; TYPE TextTable; };
+RANGE { START $F46E; END $F46F; TYPE WordTable; };
+
+RANGE { START $F470; END $F475; TYPE TextTable; };
+RANGE { START $F476; END $F477; TYPE WordTable; };
+
+RANGE { START $F478; END $F47D; TYPE TextTable; };
+RANGE { START $F47E; END $F47F; TYPE WordTable; };
+
+RANGE { START $F480; END $F485; TYPE TextTable; };
+RANGE { START $F486; END $F487; TYPE WordTable; };
+
+RANGE { START $F488; END $F48D; TYPE TextTable; };
+RANGE { START $F48E; END $F48F; TYPE WordTable; };
+
+RANGE { START $F490; END $F495; TYPE TextTable; };
+RANGE { START $F496; END $F497; TYPE WordTable; };
+
+RANGE { START $F498; END $F49D; TYPE TextTable; };
+RANGE { START $F49E; END $F49F; TYPE WordTable; };
+
+RANGE { START $F4A0; END $F4A5; TYPE TextTable; };
+RANGE { START $F4A6; END $F4A7; TYPE WordTable; };
+
+RANGE { START $F4A8; END $F4AD; TYPE TextTable; };
+RANGE { START $F4AE; END $F4AF; TYPE WordTable; };
+
+RANGE { START $F4B0; END $F4B5; TYPE TextTable; };
+RANGE { START $F4B6; END $F4B7; TYPE WordTable; };
+
+RANGE { START $F4B8; END $F4BD; TYPE TextTable; };
+RANGE { START $F4BE; END $F4BF; TYPE WordTable; };
+
+RANGE { START $F4C0; END $F4C5; TYPE TextTable; };
+RANGE { START $F4C6; END $F4C7; TYPE WordTable; };
+
+RANGE { START $F4C8; END $F4CD; TYPE TextTable; };
+RANGE { START $F4CE; END $F4CF; TYPE WordTable; };
+
+RANGE { START $F4D0; END $F4D5; TYPE TextTable; };
+RANGE { START $F4D6; END $F4D7; TYPE WordTable; };
+
+RANGE { START $F4D8; END $F4DD; TYPE TextTable; };
+RANGE { START $F4DE; END $F4DF; TYPE WordTable; };
+
+RANGE { START $F4E0; END $F4E5; TYPE TextTable; };
+RANGE { START $F4E6; END $F4E7; TYPE WordTable; };
+
+RANGE { START $F4E8; END $F4ED; TYPE TextTable; };
+RANGE { START $F4EE; END $F4EF; TYPE WordTable; };
+
+RANGE { START $F4F0; END $F4F5; TYPE TextTable; };
+RANGE { START $F4F6; END $F4F7; TYPE WordTable; };
+
+RANGE { START $F4F8; END $F4FD; TYPE TextTable; };
+RANGE { START $F4FE; END $F4FF; TYPE WordTable; };
+
+RANGE { START $F500; END $F505; TYPE TextTable; };
+RANGE { START $F506; END $F507; TYPE WordTable; };
+
+RANGE { START $F508; END $F50D; TYPE TextTable; };
+RANGE { START $F50E; END $F50F; TYPE WordTable; };
+
+RANGE { START $F510; END $F515; TYPE TextTable; };
+RANGE { START $F516; END $F517; TYPE WordTable; };
+
+RANGE { START $F518; END $F51D; TYPE TextTable; };
+RANGE { START $F51E; END $F51F; TYPE WordTable; };
+
+RANGE { START $F520; END $F525; TYPE TextTable; };
+RANGE { START $F526; END $F527; TYPE WordTable; };
+
+RANGE { START $F528; END $F52D; TYPE TextTable; };
+RANGE { START $F52E; END $F52F; TYPE WordTable; };
+
+RANGE { START $F530; END $F535; TYPE TextTable; };
+RANGE { START $F536; END $F537; TYPE WordTable; };
+
+RANGE { START $F538; END $F53D; TYPE TextTable; };
+RANGE { START $F53E; END $F53F; TYPE WordTable; };
+
+RANGE { START $F540; END $F545; TYPE TextTable; };
+RANGE { START $F546; END $F547; TYPE WordTable; };
+
+RANGE { START $F548; END $F54D; TYPE TextTable; };
+RANGE { START $F54E; END $F54F; TYPE WordTable; };
+
+RANGE { START $F550; END $F555; TYPE TextTable; };
+RANGE { START $F556; END $F557; TYPE WordTable; };
+
+RANGE { START $F558; END $F55D; TYPE TextTable; };
+RANGE { START $F55E; END $F55F; TYPE WordTable; };
+
+RANGE { START $F560; END $F565; TYPE TextTable; };
+RANGE { START $F566; END $F567; TYPE WordTable; };
+
+RANGE { START $F568; END $F56D; TYPE TextTable; };
+RANGE { START $F56E; END $F56F; TYPE WordTable; };
+
+RANGE { START $F570; END $F575; TYPE TextTable; };
+RANGE { START $F576; END $F577; TYPE WordTable; };
+
+RANGE { START $F578; END $F57D; TYPE TextTable; };
+RANGE { START $F57E; END $F57F; TYPE WordTable; };
+
+RANGE { START $F580; END $F585; TYPE TextTable; };
+RANGE { START $F586; END $F587; TYPE WordTable; };
+
+RANGE { START $F588; END $F58D; TYPE TextTable; };
+RANGE { START $F58E; END $F58F; TYPE WordTable; };
+
+RANGE { START $F590; END $F595; TYPE TextTable; };
+RANGE { START $F596; END $F597; TYPE WordTable; };
+
+RANGE { START $F598; END $F59D; TYPE TextTable; };
+RANGE { START $F59E; END $F59F; TYPE WordTable; };
+
+RANGE { START $F5A0; END $F5A5; TYPE TextTable; };
+RANGE { START $F5A6; END $F5A7; TYPE WordTable; };
+
+RANGE { START $F5A8; END $F5AD; TYPE TextTable; };
+RANGE { START $F5AE; END $F5AF; TYPE WordTable; };
+
+RANGE { START $F5B0; END $F5B5; TYPE TextTable; };
+RANGE { START $F5B6; END $F5B7; TYPE WordTable; };
+
+RANGE { START $F5B8; END $F5BD; TYPE TextTable; };
+RANGE { START $F5BE; END $F5BF; TYPE WordTable; };
+
+RANGE { START $F5C0; END $F5C5; TYPE TextTable; };
+RANGE { START $F5C6; END $F5C7; TYPE WordTable; };
+
+RANGE { START $F5C8; END $F5CD; TYPE TextTable; };
+RANGE { START $F5CE; END $F5CF; TYPE WordTable; };
+
+RANGE { START $F5D0; END $F5D5; TYPE TextTable; };
+RANGE { START $F5D6; END $F5D7; TYPE WordTable; };
+
+RANGE { START $F5D8; END $F5DD; TYPE TextTable; };
+RANGE { START $F5DE; END $F5DF; TYPE WordTable; };
+
+RANGE { START $F5E0; END $F5E5; TYPE TextTable; };
+RANGE { START $F5E6; END $F5E7; TYPE WordTable; };
+
+RANGE { START $F5E8; END $F5ED; TYPE TextTable; };
+RANGE { START $F5EE; END $F5EF; TYPE WordTable; };
+
+RANGE { START $F5F0; END $F5F5; TYPE TextTable; };
+RANGE { START $F5F6; END $F5F7; TYPE WordTable; };
+
+RANGE { START $F5F8; END $F5FD; TYPE TextTable; };
+RANGE { START $F5FE; END $F5FF; TYPE WordTable; };
+
+RANGE { START $F600; END $F605; TYPE TextTable; };
+RANGE { START $F606; END $F607; TYPE WordTable; };
+
+RANGE { START $F608; END $F60D; TYPE TextTable; };
+RANGE { START $F60E; END $F60F; TYPE WordTable; };
+
+RANGE { START $F610; END $F615; TYPE TextTable; };
+RANGE { START $F616; END $F617; TYPE WordTable; };
+
+RANGE { START $F618; END $F61D; TYPE TextTable; };
+RANGE { START $F61E; END $F61F; TYPE WordTable; };
+
+RANGE { START $F620; END $F625; TYPE TextTable; };
+RANGE { START $F626; END $F627; TYPE WordTable; };
+
+RANGE { START $F628; END $F62D; TYPE TextTable; };
+RANGE { START $F62E; END $F62F; TYPE WordTable; };
+
+RANGE { START $F630; END $F635; TYPE TextTable; };
+RANGE { START $F636; END $F637; TYPE WordTable; };
+
+RANGE { START $F638; END $F63D; TYPE TextTable; };
+RANGE { START $F63E; END $F63F; TYPE WordTable; };
+
+RANGE { START $F640; END $F645; TYPE TextTable; };
+RANGE { START $F646; END $F647; TYPE WordTable; };
+
+RANGE { START $F648; END $F64D; TYPE TextTable; };
+RANGE { START $F64E; END $F64F; TYPE WordTable; };
+
+RANGE { START $F650; END $F655; TYPE TextTable; };
+RANGE { START $F656; END $F657; TYPE WordTable; };
+
+RANGE { START $F658; END $F65D; TYPE TextTable; };
+RANGE { START $F65E; END $F65F; TYPE WordTable; };
+
+RANGE { START $F660; END $F665; TYPE TextTable; };
+RANGE { START $F666; END $F667; TYPE WordTable; };
+
+RANGE { START $F668; END $F66D; TYPE TextTable; };
+RANGE { START $F66E; END $F66F; TYPE WordTable; };
+
+RANGE { START $F670; END $F675; TYPE TextTable; };
+RANGE { START $F676; END $F677; TYPE WordTable; };
+
+RANGE { START $F678; END $F67D; TYPE TextTable; };
+RANGE { START $F67E; END $F67F; TYPE WordTable; };
+
+RANGE { START $F680; END $F685; TYPE TextTable; };
+RANGE { START $F686; END $F687; TYPE WordTable; };
+
+RANGE { START $F688; END $F68D; TYPE TextTable; };
+RANGE { START $F68E; END $F68F; TYPE WordTable; };
+
+RANGE { START $F690; END $F695; TYPE TextTable; };
+RANGE { START $F696; END $F697; TYPE WordTable; };
+
+RANGE { START $F698; END $F69D; TYPE TextTable; };
+RANGE { START $F69E; END $F69F; TYPE WordTable; };
+
+RANGE { START $F6A0; END $F6A5; TYPE TextTable; };
+RANGE { START $F6A6; END $F6A7; TYPE WordTable; };
+
+RANGE { START $F6A8; END $F6AD; TYPE TextTable; };
+RANGE { START $F6AE; END $F6AF; TYPE WordTable; };
+
+RANGE { START $F6B0; END $F6B5; TYPE TextTable; };
+RANGE { START $F6B6; END $F6B7; TYPE WordTable; };
+
+RANGE { START $F6B8; END $F6BD; TYPE TextTable; };
+RANGE { START $F6BE; END $F6BF; TYPE WordTable; };
+
+RANGE { START $F6C0; END $F6C5; TYPE TextTable; };
+RANGE { START $F6C6; END $F6C7; TYPE WordTable; };
+
+RANGE { START $F6C8; END $F6CD; TYPE TextTable; };
+RANGE { START $F6CE; END $F6CF; TYPE WordTable; };
+
+RANGE { START $F6D0; END $F6D5; TYPE TextTable; };
+RANGE { START $F6D6; END $F6D7; TYPE WordTable; };
+
+RANGE { START $F6D8; END $F6DD; TYPE TextTable; };
+RANGE { START $F6DE; END $F6DF; TYPE WordTable; };
+
+RANGE { START $F6E0; END $F6E5; TYPE TextTable; };
+RANGE { START $F6E6; END $F6E7; TYPE WordTable; };
+
+RANGE { START $F6E8; END $F6ED; TYPE TextTable; };
+RANGE { START $F6EE; END $F6EF; TYPE WordTable; };
+
+RANGE { START $F6F0; END $F6F5; TYPE TextTable; };
+RANGE { START $F6F6; END $F6F7; TYPE WordTable; };
+
+RANGE { START $F6F8; END $F6FD; TYPE TextTable; };
+RANGE { START $F6FE; END $F6FF; TYPE WordTable; };
+
+RANGE { START $F700; END $F705; TYPE TextTable; };
+RANGE { START $F706; END $F707; TYPE WordTable; };
+
+RANGE { START $F708; END $F70D; TYPE TextTable; };
+RANGE { START $F70E; END $F70F; TYPE WordTable; };
+
+RANGE { START $F710; END $F715; TYPE TextTable; };
+RANGE { START $F716; END $F717; TYPE WordTable; };
+
+RANGE { START $F718; END $F71D; TYPE TextTable; };
+RANGE { START $F71E; END $F71F; TYPE WordTable; };
+
+RANGE { START $F720; END $F725; TYPE TextTable; };
+RANGE { START $F726; END $F727; TYPE WordTable; };
+
+RANGE { START $F728; END $F72D; TYPE TextTable; };
+RANGE { START $F72E; END $F72F; TYPE WordTable; };
+
+RANGE { START $F730; END $F735; TYPE TextTable; };
+RANGE { START $F736; END $F737; TYPE WordTable; };
+
+RANGE { START $F738; END $F73D; TYPE TextTable; };
+RANGE { START $F73E; END $F73F; TYPE WordTable; };
+
+RANGE { START $F740; END $F745; TYPE TextTable; };
+RANGE { START $F746; END $F747; TYPE WordTable; };
+
+RANGE { START $F748; END $F74D; TYPE TextTable; };
+RANGE { START $F74E; END $F74F; TYPE WordTable; };
+
+RANGE { START $F750; END $F755; TYPE TextTable; };
+RANGE { START $F756; END $F757; TYPE WordTable; };
+
+RANGE { START $F758; END $F75D; TYPE TextTable; };
+RANGE { START $F75E; END $F75F; TYPE WordTable; };
+
+RANGE { START $F760; END $F765; TYPE TextTable; };
+RANGE { START $F766; END $F767; TYPE WordTable; };
+
+RANGE { START $F768; END $F76D; TYPE TextTable; };
+RANGE { START $F76E; END $F76F; TYPE WordTable; };
+
+RANGE { START $F770; END $F775; TYPE TextTable; };
+RANGE { START $F776; END $F777; TYPE WordTable; };
+
+RANGE { START $F778; END $F77D; TYPE TextTable; };
+RANGE { START $F77E; END $F77F; TYPE WordTable; };
+
+RANGE { START $F780; END $F785; TYPE TextTable; };
+RANGE { START $F786; END $F787; TYPE WordTable; };
+
+RANGE { START $F788; END $F78D; TYPE TextTable; };
+RANGE { START $F78E; END $F78F; TYPE WordTable; };
+
+RANGE { START $F790; END $F795; TYPE TextTable; };
+RANGE { START $F796; END $F797; TYPE WordTable; };
+
+RANGE { START $F798; END $F79D; TYPE TextTable; };
+RANGE { START $F79E; END $F79F; TYPE WordTable; };
+
+RANGE { START $F7A0; END $F7A5; TYPE TextTable; };
+RANGE { START $F7A6; END $F7A7; TYPE WordTable; };
+
+RANGE { START $F7A8; END $F7AD; TYPE TextTable; };
+RANGE { START $F7AE; END $F7AF; TYPE WordTable; };
+
+RANGE { START $F7B0; END $F7B5; TYPE TextTable; };
+RANGE { START $F7B6; END $F7B7; TYPE WordTable; };
+
+RANGE { START $F7B8; END $F7BD; TYPE TextTable; };
+RANGE { START $F7BE; END $F7BF; TYPE WordTable; };
+
+RANGE { START $F7C0; END $F7C5; TYPE TextTable; };
+RANGE { START $F7C6; END $F7C7; TYPE WordTable; };
+
+RANGE { START $F7C8; END $F7CD; TYPE TextTable; };
+RANGE { START $F7CE; END $F7CF; TYPE WordTable; };
+
+RANGE { START $F7D0; END $F7D5; TYPE TextTable; };
+RANGE { START $F7D6; END $F7D7; TYPE WordTable; };
+
+RANGE { START $F7D8; END $F7DD; TYPE TextTable; };
+RANGE { START $F7DE; END $F7DF; TYPE WordTable; };
+
+RANGE { START $F7E0; END $F7E5; TYPE TextTable; };
+RANGE { START $F7E6; END $F7E7; TYPE WordTable; };
+
+RANGE { START $F7E8; END $F7ED; TYPE TextTable; };
+RANGE { START $F7EE; END $F7EF; TYPE WordTable; };
+
+RANGE { START $F7F0; END $F7F5; TYPE TextTable; };
+RANGE { START $F7F6; END $F7F7; TYPE WordTable; };
+
+RANGE { START $F7F8; END $F7FD; TYPE TextTable; };
+RANGE { START $F7FE; END $F7FF; TYPE WordTable; };
+
+RANGE { START $F800; END $F805; TYPE TextTable; };
+RANGE { START $F806; END $F807; TYPE WordTable; };
+
+RANGE { START $F808; END $F80D; TYPE TextTable; };
+RANGE { START $F80E; END $F80F; TYPE WordTable; };
+
+RANGE { START $F810; END $F815; TYPE TextTable; };
+RANGE { START $F816; END $F817; TYPE WordTable; };
+
+RANGE { START $F818; END $F81D; TYPE TextTable; };
+RANGE { START $F81E; END $F81F; TYPE WordTable; };
+
+RANGE { START $F820; END $F825; TYPE TextTable; };
+RANGE { START $F826; END $F827; TYPE WordTable; };
+
+RANGE { START $F828; END $F82D; TYPE TextTable; };
+RANGE { START $F82E; END $F82F; TYPE WordTable; };
+
+RANGE { START $F830; END $F835; TYPE TextTable; };
+RANGE { START $F836; END $F837; TYPE WordTable; };
+
+RANGE { START $F838; END $F83D; TYPE TextTable; };
+RANGE { START $F83E; END $F83F; TYPE WordTable; };
+
+RANGE { START $F840; END $F845; TYPE TextTable; };
+RANGE { START $F846; END $F847; TYPE WordTable; };
+
+RANGE { START $F848; END $F84D; TYPE TextTable; };
+RANGE { START $F84E; END $F84F; TYPE WordTable; };
+
+RANGE { START $F850; END $F855; TYPE TextTable; };
+RANGE { START $F856; END $F857; TYPE WordTable; };
+
+RANGE { START $F858; END $F85D; TYPE TextTable; };
+RANGE { START $F85E; END $F85F; TYPE WordTable; };
+
+RANGE { START $F860; END $F865; TYPE TextTable; };
+RANGE { START $F866; END $F867; TYPE WordTable; };
+
+RANGE { START $F868; END $F86D; TYPE TextTable; };
+RANGE { START $F86E; END $F86F; TYPE WordTable; };
+
+RANGE { START $F870; END $F875; TYPE TextTable; };
+RANGE { START $F876; END $F877; TYPE WordTable; };
+
+RANGE { START $F878; END $F87D; TYPE TextTable; };
+RANGE { START $F87E; END $F87F; TYPE WordTable; };
+
+RANGE { START $F880; END $F885; TYPE TextTable; };
+RANGE { START $F886; END $F887; TYPE WordTable; };
+
+RANGE { START $F888; END $F88D; TYPE TextTable; };
+RANGE { START $F88E; END $F88F; TYPE WordTable; };
+
+RANGE { START $F890; END $F895; TYPE TextTable; };
+RANGE { START $F896; END $F897; TYPE WordTable; };
+
+RANGE { START $F898; END $F89D; TYPE TextTable; };
+RANGE { START $F89E; END $F89F; TYPE WordTable; };
+
+RANGE { START $F8A0; END $F8A5; TYPE TextTable; };
+RANGE { START $F8A6; END $F8A7; TYPE WordTable; };
+
+RANGE { START $F8A8; END $F8AD; TYPE TextTable; };
+RANGE { START $F8AE; END $F8AF; TYPE WordTable; };
+
+RANGE { START $F8B0; END $F8B5; TYPE TextTable; };
+RANGE { START $F8B6; END $F8B7; TYPE WordTable; };
+
+RANGE { START $F8B8; END $F8BD; TYPE TextTable; };
+RANGE { START $F8BE; END $F8BF; TYPE WordTable; };
+
+RANGE { START $F8C0; END $F8C5; TYPE TextTable; };
+RANGE { START $F8C6; END $F8C7; TYPE WordTable; };
+
+RANGE { START $F8C8; END $F8CD; TYPE TextTable; };
+RANGE { START $F8CE; END $F8CF; TYPE WordTable; };
+
+RANGE { START $F8D0; END $F8D5; TYPE TextTable; };
+RANGE { START $F8D6; END $F8D7; TYPE WordTable; };
+
+RANGE { START $F8D8; END $F8DD; TYPE TextTable; };
+RANGE { START $F8DE; END $F8DF; TYPE WordTable; };
+
+RANGE { START $F8E0; END $F8E5; TYPE TextTable; };
+RANGE { START $F8E6; END $F8E7; TYPE WordTable; };
+
+RANGE { START $F8E8; END $F8ED; TYPE TextTable; };
+RANGE { START $F8EE; END $F8EF; TYPE WordTable; };
+
+RANGE { START $F8F0; END $F8F5; TYPE TextTable; };
+RANGE { START $F8F6; END $F8F7; TYPE WordTable; };
+
+RANGE { START $F8F8; END $F8FD; TYPE TextTable; };
+RANGE { START $F8FE; END $F8FF; TYPE WordTable; };
+
+RANGE { START $F900; END $F905; TYPE TextTable; };
+RANGE { START $F906; END $F907; TYPE WordTable; };
+
+RANGE { START $F908; END $F90D; TYPE TextTable; };
+RANGE { START $F90E; END $F90F; TYPE WordTable; };
+
+RANGE { START $F910; END $F915; TYPE TextTable; };
+RANGE { START $F916; END $F917; TYPE WordTable; };
+
+RANGE { START $F918; END $F91D; TYPE TextTable; };
+RANGE { START $F91E; END $F91F; TYPE WordTable; };
+
+RANGE { START $F920; END $F925; TYPE TextTable; };
+RANGE { START $F926; END $F927; TYPE WordTable; };
+
+RANGE { START $F928; END $F92D; TYPE TextTable; };
+RANGE { START $F92E; END $F92F; TYPE WordTable; };
+
+RANGE { START $F930; END $F935; TYPE TextTable; };
+RANGE { START $F936; END $F937; TYPE WordTable; };
+
+RANGE { START $F938; END $F93D; TYPE TextTable; };
+RANGE { START $F93E; END $F93F; TYPE WordTable; };
+
+RANGE { START $F940; END $F945; TYPE TextTable; };
+RANGE { START $F946; END $F947; TYPE WordTable; };
+
+RANGE { START $F948; END $F94D; TYPE TextTable; };
+RANGE { START $F94E; END $F94F; TYPE WordTable; };
+
+RANGE { START $F950; END $F955; TYPE TextTable; };
+RANGE { START $F956; END $F957; TYPE WordTable; };
+
+RANGE { START $F958; END $F95D; TYPE TextTable; };
+RANGE { START $F95E; END $F95F; TYPE WordTable; };
+
+RANGE { START $F960; END $F965; TYPE TextTable; };
+RANGE { START $F966; END $F967; TYPE WordTable; };
+
+RANGE { START $F968; END $F96D; TYPE TextTable; };
+RANGE { START $F96E; END $F96F; TYPE WordTable; };
+
+RANGE { START $F970; END $F975; TYPE TextTable; };
+RANGE { START $F976; END $F977; TYPE WordTable; };
+
+RANGE { START $F978; END $F97D; TYPE TextTable; };
+RANGE { START $F97E; END $F97F; TYPE WordTable; };
+
+RANGE { START $F980; END $F985; TYPE TextTable; };
+RANGE { START $F986; END $F987; TYPE WordTable; };
+
+RANGE { START $F988; END $F98D; TYPE TextTable; };
+RANGE { START $F98E; END $F98F; TYPE WordTable; };
+
+RANGE { START $F990; END $F995; TYPE TextTable; };
+RANGE { START $F996; END $F997; TYPE WordTable; };
+
+RANGE { START $F998; END $F99D; TYPE TextTable; };
+RANGE { START $F99E; END $F99F; TYPE WordTable; };
+
+RANGE { START $F9A0; END $F9A5; TYPE TextTable; };
+RANGE { START $F9A6; END $F9A7; TYPE WordTable; };
+
+RANGE { START $F9A8; END $F9AD; TYPE TextTable; };
+RANGE { START $F9AE; END $F9AF; TYPE WordTable; };
+
+RANGE { START $F9B0; END $F9B5; TYPE TextTable; };
+RANGE { START $F9B6; END $F9B7; TYPE WordTable; };
+
+RANGE { START $F9B8; END $F9BD; TYPE TextTable; };
+RANGE { START $F9BE; END $F9BF; TYPE WordTable; };
+
+RANGE { START $F9C0; END $F9C5; TYPE TextTable; };
+RANGE { START $F9C6; END $F9C7; TYPE WordTable; };
+
+RANGE { START $F9C8; END $F9CD; TYPE TextTable; };
+RANGE { START $F9CE; END $F9CF; TYPE WordTable; };
+
+RANGE { START $F9D0; END $F9D5; TYPE TextTable; };
+RANGE { START $F9D6; END $F9D7; TYPE WordTable; };
+
+RANGE { START $F9D8; END $F9DD; TYPE TextTable; };
+RANGE { START $F9DE; END $F9DF; TYPE WordTable; };
+
+RANGE { START $F9E0; END $F9E5; TYPE TextTable; };
+RANGE { START $F9E6; END $F9E7; TYPE WordTable; };
+
+RANGE { START $F9E8; END $F9ED; TYPE TextTable; };
+RANGE { START $F9EE; END $F9EF; TYPE WordTable; };
+
+RANGE { START $F9F0; END $F9F5; TYPE TextTable; };
+RANGE { START $F9F6; END $F9F7; TYPE WordTable; };
+
+RANGE { START $F9F8; END $F9FD; TYPE TextTable; };
+RANGE { START $F9FE; END $F9FF; TYPE WordTable; };
+
+RANGE { START $FA00; END $FA05; TYPE TextTable; };
+RANGE { START $FA06; END $FA07; TYPE WordTable; };
+
+RANGE { START $FA08; END $FA0D; TYPE TextTable; };
+RANGE { START $FA0E; END $FA0F; TYPE WordTable; };
+
+RANGE { START $FA10; END $FA15; TYPE TextTable; };
+RANGE { START $FA16; END $FA17; TYPE WordTable; };
+
+RANGE { START $FA18; END $FA1D; TYPE TextTable; };
+RANGE { START $FA1E; END $FA1F; TYPE WordTable; };
+
+RANGE { START $FA20; END $FA25; TYPE TextTable; };
+RANGE { START $FA26; END $FA27; TYPE WordTable; };
+
+RANGE { START $FA28; END $FA2D; TYPE TextTable; };
+RANGE { START $FA2E; END $FA2F; TYPE WordTable; };
+
+RANGE { START $FA30; END $FA35; TYPE TextTable; };
+RANGE { START $FA36; END $FA37; TYPE WordTable; };
+
+RANGE { START $FA38; END $FA3D; TYPE TextTable; };
+RANGE { START $FA3E; END $FA3F; TYPE WordTable; };
+
+RANGE { START $FA40; END $FA45; TYPE TextTable; };
+RANGE { START $FA46; END $FA47; TYPE WordTable; };
+
+RANGE { START $FA48; END $FA4D; TYPE TextTable; };
+RANGE { START $FA4E; END $FA4F; TYPE WordTable; };
+
+RANGE { START $FA50; END $FA55; TYPE TextTable; };
+RANGE { START $FA56; END $FA57; TYPE WordTable; };
+
+RANGE { START $FA58; END $FA5D; TYPE TextTable; };
+RANGE { START $FA5E; END $FA5F; TYPE WordTable; };
+
+RANGE { START $FA60; END $FA65; TYPE TextTable; };
+RANGE { START $FA66; END $FA67; TYPE WordTable; };
+
+RANGE { START $FA68; END $FA6D; TYPE TextTable; };
+RANGE { START $FA6E; END $FA6F; TYPE WordTable; };
+
+RANGE { START $FA70; END $FA75; TYPE TextTable; };
+RANGE { START $FA76; END $FA77; TYPE WordTable; };
+
+RANGE { START $FA78; END $FA7D; TYPE TextTable; };
+RANGE { START $FA7E; END $FA7F; TYPE WordTable; };
+
+RANGE { START $FA80; END $FA85; TYPE TextTable; };
+RANGE { START $FA86; END $FA87; TYPE WordTable; };
+
+RANGE { START $FA88; END $FA8D; TYPE TextTable; };
+RANGE { START $FA8E; END $FA8F; TYPE WordTable; };
+
+RANGE { START $FA90; END $FA95; TYPE TextTable; };
+RANGE { START $FA96; END $FA97; TYPE WordTable; };
+
+RANGE { START $FA98; END $FA9D; TYPE TextTable; };
+RANGE { START $FA9E; END $FA9F; TYPE WordTable; };
+
+RANGE { START $FAA0; END $FAA5; TYPE TextTable; };
+RANGE { START $FAA6; END $FAA7; TYPE WordTable; };
+
+RANGE { START $FAA8; END $FAAD; TYPE TextTable; };
+RANGE { START $FAAE; END $FAAF; TYPE WordTable; };
+
+RANGE { START $FAB0; END $FAB5; TYPE TextTable; };
+RANGE { START $FAB6; END $FAB7; TYPE WordTable; };
+
+RANGE { START $FAB8; END $FABD; TYPE TextTable; };
+RANGE { START $FABE; END $FABF; TYPE WordTable; };
+
+RANGE { START $FAC0; END $FAC5; TYPE TextTable; };
+RANGE { START $FAC6; END $FAC7; TYPE WordTable; };
+
+RANGE { START $FAC8; END $FACD; TYPE TextTable; };
+RANGE { START $FACE; END $FACF; TYPE WordTable; };
+
+RANGE { START $FAD0; END $FAD5; TYPE TextTable; };
+RANGE { START $FAD6; END $FAD7; TYPE WordTable; };
+
+RANGE { START $FAD8; END $FADD; TYPE TextTable; };
+RANGE { START $FADE; END $FADF; TYPE WordTable; };
+
+RANGE { START $FAE0; END $FAE5; TYPE TextTable; };
+RANGE { START $FAE6; END $FAE7; TYPE WordTable; };
+
+RANGE { START $FAE8; END $FAED; TYPE TextTable; };
+RANGE { START $FAEE; END $FAEF; TYPE WordTable; };
+
+RANGE { START $FAF0; END $FAF5; TYPE TextTable; };
+RANGE { START $FAF6; END $FAF7; TYPE WordTable; };
+
+RANGE { START $FAF8; END $FAFD; TYPE TextTable; };
+RANGE { START $FAFE; END $FAFF; TYPE WordTable; };
+
+RANGE { START $FB00; END $FB05; TYPE TextTable; };
+RANGE { START $FB06; END $FB07; TYPE WordTable; };
+
+RANGE { START $FB08; END $FB0D; TYPE TextTable; };
+RANGE { START $FB0E; END $FB0F; TYPE WordTable; };
+
+RANGE { START $FB10; END $FB15; TYPE TextTable; };
+RANGE { START $FB16; END $FB17; TYPE WordTable; };
+
+RANGE { START $FB18; END $FB1D; TYPE TextTable; };
+RANGE { START $FB1E; END $FB1F; TYPE WordTable; };
+
+RANGE { START $FB20; END $FB25; TYPE TextTable; };
+RANGE { START $FB26; END $FB27; TYPE WordTable; };
+
+RANGE { START $FB28; END $FB2D; TYPE TextTable; };
+RANGE { START $FB2E; END $FB2F; TYPE WordTable; };
+
+RANGE { START $FB30; END $FB35; TYPE TextTable; };
+RANGE { START $FB36; END $FB37; TYPE WordTable; };
+
+RANGE { START $FB38; END $FB3D; TYPE TextTable; };
+RANGE { START $FB3E; END $FB3F; TYPE WordTable; };
+
+RANGE { START $FB40; END $FB45; TYPE TextTable; };
+RANGE { START $FB46; END $FB47; TYPE WordTable; };
+
+RANGE { START $FB48; END $FB4D; TYPE TextTable; };
+RANGE { START $FB4E; END $FB4F; TYPE WordTable; };
+
+RANGE { START $FB50; END $FB55; TYPE TextTable; };
+RANGE { START $FB56; END $FB57; TYPE WordTable; };
+
+RANGE { START $FB58; END $FB5D; TYPE TextTable; };
+RANGE { START $FB5E; END $FB5F; TYPE WordTable; };
+
+RANGE { START $FB60; END $FB65; TYPE TextTable; };
+RANGE { START $FB66; END $FB67; TYPE WordTable; };
+
+RANGE { START $FB68; END $FB6D; TYPE TextTable; };
+RANGE { START $FB6E; END $FB6F; TYPE WordTable; };
+
+RANGE { START $FB70; END $FB75; TYPE TextTable; };
+RANGE { START $FB76; END $FB77; TYPE WordTable; };
+
+RANGE { START $FB78; END $FB7D; TYPE TextTable; };
+RANGE { START $FB7E; END $FB7F; TYPE WordTable; };
+
+RANGE { START $FB80; END $FB85; TYPE TextTable; };
+RANGE { START $FB86; END $FB87; TYPE WordTable; };
+
+RANGE { START $FB88; END $FB8D; TYPE TextTable; };
+RANGE { START $FB8E; END $FB8F; TYPE WordTable; };
+
+RANGE { START $FB90; END $FB95; TYPE TextTable; };
+RANGE { START $FB96; END $FB97; TYPE WordTable; };
+
+RANGE { START $FB98; END $FB9D; TYPE TextTable; };
+RANGE { START $FB9E; END $FB9F; TYPE WordTable; };
+
+RANGE { START $FBA0; END $FBA5; TYPE TextTable; };
+RANGE { START $FBA6; END $FBA7; TYPE WordTable; };
+
+RANGE { START $FBA8; END $FBAD; TYPE TextTable; };
+RANGE { START $FBAE; END $FBAF; TYPE WordTable; };
+
+RANGE { START $FBB0; END $FBB5; TYPE TextTable; };
+RANGE { START $FBB6; END $FBB7; TYPE WordTable; };
+
+RANGE { START $FBB8; END $FBBD; TYPE TextTable; };
+RANGE { START $FBBE; END $FBBF; TYPE WordTable; };
+
+RANGE { START $FBC0; END $FBC5; TYPE TextTable; };
+RANGE { START $FBC6; END $FBC7; TYPE WordTable; };
+
+RANGE { START $FBC8; END $FBCD; TYPE TextTable; };
+RANGE { START $FBCE; END $FBCF; TYPE WordTable; };
+
+RANGE { START $FBD0; END $FBD5; TYPE TextTable; };
+RANGE { START $FBD6; END $FBD7; TYPE WordTable; };
+
+RANGE { START $FBD8; END $FBDD; TYPE TextTable; };
+RANGE { START $FBDE; END $FBDF; TYPE WordTable; };
+
+RANGE { START $FBE0; END $FBE5; TYPE TextTable; };
+RANGE { START $FBE6; END $FBE7; TYPE WordTable; };
+
+RANGE { START $FBE8; END $FBED; TYPE TextTable; };
+RANGE { START $FBEE; END $FBEF; TYPE WordTable; };
+
+RANGE { START $FBF0; END $FBF5; TYPE TextTable; };
+RANGE { START $FBF6; END $FBF7; TYPE WordTable; };
+
+RANGE { START $FBF8; END $FBFD; TYPE TextTable; };
+RANGE { START $FBFE; END $FBFF; TYPE WordTable; };
+
+RANGE { START $FC00; END $FC05; TYPE TextTable; };
+RANGE { START $FC06; END $FC07; TYPE WordTable; };
+
+RANGE { START $FC08; END $FC0D; TYPE TextTable; };
+RANGE { START $FC0E; END $FC0F; TYPE WordTable; };
+
+RANGE { START $FC10; END $FC15; TYPE TextTable; };
+RANGE { START $FC16; END $FC17; TYPE WordTable; };
+
+RANGE { START $FC18; END $FC1D; TYPE TextTable; };
+RANGE { START $FC1E; END $FC1F; TYPE WordTable; };
+
+RANGE { START $FC20; END $FC25; TYPE TextTable; };
+RANGE { START $FC26; END $FC27; TYPE WordTable; };
+
+RANGE { START $FC28; END $FC2D; TYPE TextTable; };
+RANGE { START $FC2E; END $FC2F; TYPE WordTable; };
+
+RANGE { START $FC30; END $FC35; TYPE TextTable; };
+RANGE { START $FC36; END $FC37; TYPE WordTable; };
+
+RANGE { START $FC38; END $FC3D; TYPE TextTable; };
+RANGE { START $FC3E; END $FC3F; TYPE WordTable; };
+
+RANGE { START $FC40; END $FC45; TYPE TextTable; };
+RANGE { START $FC46; END $FC47; TYPE WordTable; };
+
+RANGE { START $FC48; END $FC4D; TYPE TextTable; };
+RANGE { START $FC4E; END $FC4F; TYPE WordTable; };
+
+RANGE { START $FC50; END $FC55; TYPE TextTable; };
+RANGE { START $FC56; END $FC57; TYPE WordTable; };
+
+RANGE { START $FC58; END $FC5D; TYPE TextTable; };
+RANGE { START $FC5E; END $FC5F; TYPE WordTable; };
+
+RANGE { START $FC60; END $FC65; TYPE TextTable; };
+RANGE { START $FC66; END $FC67; TYPE WordTable; };
+
+RANGE { START $FC68; END $FC6D; TYPE TextTable; };
+RANGE { START $FC6E; END $FC6F; TYPE WordTable; };
+
+RANGE { START $FC70; END $FC75; TYPE TextTable; };
+RANGE { START $FC76; END $FC77; TYPE WordTable; };
+
+RANGE { START $FC78; END $FC7D; TYPE TextTable; };
+RANGE { START $FC7E; END $FC7F; TYPE WordTable; };
+
+RANGE { START $FC80; END $FC85; TYPE TextTable; };
+RANGE { START $FC86; END $FC87; TYPE WordTable; };
+
+RANGE { START $FC88; END $FC8D; TYPE TextTable; };
+RANGE { START $FC8E; END $FC8F; TYPE WordTable; };
+
+RANGE { START $FC90; END $FC95; TYPE TextTable; };
+RANGE { START $FC96; END $FC97; TYPE WordTable; };
+
+RANGE { START $FC98; END $FC9D; TYPE TextTable; };
+RANGE { START $FC9E; END $FC9F; TYPE WordTable; };
+
+RANGE { START $FCA0; END $FCA5; TYPE TextTable; };
+RANGE { START $FCA6; END $FCA7; TYPE WordTable; };
+
+RANGE { START $FCA8; END $FCAD; TYPE TextTable; };
+RANGE { START $FCAE; END $FCAF; TYPE WordTable; };
+
+RANGE { START $FCB0; END $FCB5; TYPE TextTable; };
+RANGE { START $FCB6; END $FCB7; TYPE WordTable; };
+
+RANGE { START $FCB8; END $FCBD; TYPE TextTable; };
+RANGE { START $FCBE; END $FCBF; TYPE WordTable; };
+
+RANGE { START $FCC0; END $FCC5; TYPE TextTable; };
+RANGE { START $FCC6; END $FCC7; TYPE WordTable; };
+
+RANGE { START $FCC8; END $FCCD; TYPE TextTable; };
+RANGE { START $FCCE; END $FCCF; TYPE WordTable; };
+
+RANGE { START $FCD0; END $FCD5; TYPE TextTable; };
+RANGE { START $FCD6; END $FCD7; TYPE WordTable; };
+
+RANGE { START $FCD8; END $FCDD; TYPE TextTable; };
+RANGE { START $FCDE; END $FCDF; TYPE WordTable; };
+
+RANGE { START $FCE0; END $FCE5; TYPE TextTable; };
+RANGE { START $FCE6; END $FCE7; TYPE WordTable; };
+
+RANGE { START $FCE8; END $FCED; TYPE TextTable; };
+RANGE { START $FCEE; END $FCEF; TYPE WordTable; };
+
+RANGE { START $FCF0; END $FCF5; TYPE TextTable; };
+RANGE { START $FCF6; END $FCF7; TYPE WordTable; };
+
+RANGE { START $FCF8; END $FCFD; TYPE TextTable; };
+RANGE { START $FCFE; END $FCFF; TYPE WordTable; };
+
+RANGE { START $FD00; END $FD05; TYPE TextTable; };
+RANGE { START $FD06; END $FD07; TYPE WordTable; };
+
+RANGE { START $FD08; END $FD0D; TYPE TextTable; };
+RANGE { START $FD0E; END $FD0F; TYPE WordTable; };
+
+RANGE { START $FD10; END $FD15; TYPE TextTable; };
+RANGE { START $FD16; END $FD17; TYPE WordTable; };
+
+RANGE { START $FD18; END $FD1D; TYPE TextTable; };
+RANGE { START $FD1E; END $FD1F; TYPE WordTable; };
+
+RANGE { START $FD20; END $FD25; TYPE TextTable; };
+RANGE { START $FD26; END $FD27; TYPE WordTable; };
+
+RANGE { START $FD28; END $FD2D; TYPE TextTable; };
+RANGE { START $FD2E; END $FD2F; TYPE WordTable; };
+
+RANGE { START $FD30; END $FD35; TYPE TextTable; };
+RANGE { START $FD36; END $FD37; TYPE WordTable; };
+
+RANGE { START $FD38; END $FD3D; TYPE TextTable; };
+RANGE { START $FD3E; END $FD3F; TYPE WordTable; };
+
+RANGE { START $FD40; END $FD45; TYPE TextTable; };
+RANGE { START $FD46; END $FD47; TYPE WordTable; };
+
+RANGE { START $FD48; END $FD4D; TYPE TextTable; };
+RANGE { START $FD4E; END $FD4F; TYPE WordTable; };
+
+RANGE { START $FD50; END $FD55; TYPE TextTable; };
+RANGE { START $FD56; END $FD57; TYPE WordTable; };
+
+RANGE { START $FD58; END $FD5D; TYPE TextTable; };
+RANGE { START $FD5E; END $FD5F; TYPE WordTable; };
+
+RANGE { START $FD60; END $FD65; TYPE TextTable; };
+RANGE { START $FD66; END $FD67; TYPE WordTable; };
+
+RANGE { START $FD68; END $FD6D; TYPE TextTable; };
+RANGE { START $FD6E; END $FD6F; TYPE WordTable; };
+
+RANGE { START $FD70; END $FD75; TYPE TextTable; };
+RANGE { START $FD76; END $FD77; TYPE WordTable; };
+
+RANGE { START $FD78; END $FD7D; TYPE TextTable; };
+RANGE { START $FD7E; END $FD7F; TYPE WordTable; };
+
+RANGE { START $FD80; END $FD85; TYPE TextTable; };
+RANGE { START $FD86; END $FD87; TYPE WordTable; };
+
+RANGE { START $FD88; END $FD8D; TYPE TextTable; };
+RANGE { START $FD8E; END $FD8F; TYPE WordTable; };
+
+RANGE { START $FD90; END $FD95; TYPE TextTable; };
+RANGE { START $FD96; END $FD97; TYPE WordTable; };
+
+RANGE { START $FD98; END $FD9D; TYPE TextTable; };
+RANGE { START $FD9E; END $FD9F; TYPE WordTable; };
+
+RANGE { START $FDA0; END $FDA5; TYPE TextTable; };
+RANGE { START $FDA6; END $FDA7; TYPE WordTable; };
+
+RANGE { START $FDA8; END $FDAD; TYPE TextTable; };
+RANGE { START $FDAE; END $FDAF; TYPE WordTable; };
+
+RANGE { START $FDB0; END $FDB5; TYPE TextTable; };
+RANGE { START $FDB6; END $FDB7; TYPE WordTable; };
+
+RANGE { START $FDB8; END $FDBD; TYPE TextTable; };
+RANGE { START $FDBE; END $FDBF; TYPE WordTable; };
+
+RANGE { START $FDC0; END $FDC5; TYPE TextTable; };
+RANGE { START $FDC6; END $FDC7; TYPE WordTable; };
+
+RANGE { START $FDC8; END $FDCD; TYPE TextTable; };
+RANGE { START $FDCE; END $FDCF; TYPE WordTable; };
+
+RANGE { START $FDD0; END $FDD5; TYPE TextTable; };
+RANGE { START $FDD6; END $FDD7; TYPE WordTable; };
+
+RANGE { START $FDD8; END $FDDD; TYPE TextTable; };
+RANGE { START $FDDE; END $FDDF; TYPE WordTable; };
+
+RANGE { START $FDE0; END $FDE5; TYPE TextTable; };
+RANGE { START $FDE6; END $FDE7; TYPE WordTable; };
+
+RANGE { START $FDE8; END $FDED; TYPE TextTable; };
+RANGE { START $FDEE; END $FDEF; TYPE WordTable; };
+
+RANGE { START $FDF0; END $FDF5; TYPE TextTable; };
+RANGE { START $FDF6; END $FDF7; TYPE WordTable; };
+
+RANGE { START $FDF8; END $FDFD; TYPE TextTable; };
+RANGE { START $FDFE; END $FDFF; TYPE WordTable; };
+
+RANGE { START $FE00; END $FE05; TYPE TextTable; };
+RANGE { START $FE06; END $FE07; TYPE WordTable; };
+
+RANGE { START $FE08; END $FE0D; TYPE TextTable; };
+RANGE { START $FE0E; END $FE0F; TYPE WordTable; };
+
+RANGE { START $FE10; END $FE15; TYPE TextTable; };
+RANGE { START $FE16; END $FE17; TYPE WordTable; };
+
+RANGE { START $FE18; END $FE1D; TYPE TextTable; };
+RANGE { START $FE1E; END $FE1F; TYPE WordTable; };
+
+RANGE { START $FE20; END $FE25; TYPE TextTable; };
+RANGE { START $FE26; END $FE27; TYPE WordTable; };
+
+RANGE { START $FE28; END $FE2D; TYPE TextTable; };
+RANGE { START $FE2E; END $FE2F; TYPE WordTable; };
+
+RANGE { START $FE30; END $FE35; TYPE TextTable; };
+RANGE { START $FE36; END $FE37; TYPE WordTable; };
+
+RANGE { START $FE38; END $FE3D; TYPE TextTable; };
+RANGE { START $FE3E; END $FE3F; TYPE WordTable; };
+
+RANGE { START $FE40; END $FE45; TYPE TextTable; };
+RANGE { START $FE46; END $FE47; TYPE WordTable; };
+
+RANGE { START $FE48; END $FE4D; TYPE TextTable; };
+RANGE { START $FE4E; END $FE4F; TYPE WordTable; };
+
+RANGE { START $FE50; END $FE55; TYPE TextTable; };
+RANGE { START $FE56; END $FE57; TYPE WordTable; };
+
+RANGE { START $FE58; END $FE5D; TYPE TextTable; };
+RANGE { START $FE5E; END $FE5F; TYPE WordTable; };
+
+RANGE { START $FE60; END $FE65; TYPE TextTable; };
+RANGE { START $FE66; END $FE67; TYPE WordTable; };
+
+RANGE { START $FE68; END $FE6D; TYPE TextTable; };
+RANGE { START $FE6E; END $FE6F; TYPE WordTable; };
+
+RANGE { START $FE70; END $FE75; TYPE TextTable; };
+RANGE { START $FE76; END $FE77; TYPE WordTable; };
+
+RANGE { START $FE78; END $FE7D; TYPE TextTable; };
+RANGE { START $FE7E; END $FE7F; TYPE WordTable; };
+
+RANGE { START $FE80; END $FE85; TYPE TextTable; };
+RANGE { START $FE86; END $FE87; TYPE WordTable; };
+
+RANGE { START $FE88; END $FE8D; TYPE TextTable; };
+RANGE { START $FE8E; END $FE8F; TYPE WordTable; };
+
+RANGE { START $FE90; END $FE95; TYPE TextTable; };
+RANGE { START $FE96; END $FE97; TYPE WordTable; };
+
+RANGE { START $FE98; END $FE9D; TYPE TextTable; };
+RANGE { START $FE9E; END $FE9F; TYPE WordTable; };
+
+RANGE { START $FEA0; END $FEA5; TYPE TextTable; };
+RANGE { START $FEA6; END $FEA7; TYPE WordTable; };
+
+RANGE { START $FEA8; END $FEAD; TYPE TextTable; };
+RANGE { START $FEAE; END $FEAF; TYPE WordTable; };
+
+RANGE { START $FEB0; END $FEB5; TYPE TextTable; };
+RANGE { START $FEB6; END $FEB7; TYPE WordTable; };
+
+RANGE { START $FEB8; END $FEBD; TYPE TextTable; };
+RANGE { START $FEBE; END $FEBF; TYPE WordTable; };
+
+RANGE { START $FEC0; END $FEC5; TYPE TextTable; };
+RANGE { START $FEC6; END $FEC7; TYPE WordTable; };
+
+RANGE { START $FEC8; END $FECD; TYPE TextTable; };
+RANGE { START $FECE; END $FECF; TYPE WordTable; };
+
+RANGE { START $FED0; END $FED5; TYPE TextTable; };
+RANGE { START $FED6; END $FED7; TYPE WordTable; };
+
+RANGE { START $FED8; END $FEDD; TYPE TextTable; };
+RANGE { START $FEDE; END $FEDF; TYPE WordTable; };
+
+RANGE { START $FEE0; END $FEE5; TYPE TextTable; };
+RANGE { START $FEE6; END $FEE7; TYPE WordTable; };
+
+RANGE { START $FEE8; END $FEED; TYPE TextTable; };
+RANGE { START $FEEE; END $FEEF; TYPE WordTable; };
+
+RANGE { START $FEF0; END $FEF5; TYPE TextTable; };
+RANGE { START $FEF6; END $FEF7; TYPE WordTable; };
+
+RANGE { START $FEF8; END $FEFD; TYPE TextTable; };
+RANGE { START $FEFE; END $FEFF; TYPE WordTable; };
+
+RANGE { START $FF00; END $FF05; TYPE TextTable; };
+RANGE { START $FF06; END $FF07; TYPE WordTable; };
+
+RANGE { START $FF08; END $FF0D; TYPE TextTable; };
+RANGE { START $FF0E; END $FF0F; TYPE WordTable; };
+
+RANGE { START $FF10; END $FF15; TYPE TextTable; };
+RANGE { START $FF16; END $FF17; TYPE WordTable; };
+
+RANGE { START $FF18; END $FF1D; TYPE TextTable; };
+RANGE { START $FF1E; END $FF1F; TYPE WordTable; };
+
+RANGE { START $FF20; END $FF25; TYPE TextTable; };
+RANGE { START $FF26; END $FF27; TYPE WordTable; };
+
+RANGE { START $FF28; END $FF2D; TYPE TextTable; };
+RANGE { START $FF2E; END $FF2F; TYPE WordTable; };
+
+RANGE { START $FF30; END $FF35; TYPE TextTable; };
+RANGE { START $FF36; END $FF37; TYPE WordTable; };
+
+RANGE { START $FF38; END $FF3D; TYPE TextTable; };
+RANGE { START $FF3E; END $FF3F; TYPE WordTable; };
+
+RANGE { START $FF40; END $FF45; TYPE TextTable; };
+RANGE { START $FF46; END $FF47; TYPE WordTable; };
+
+RANGE { START $FF48; END $FF4D; TYPE TextTable; };
+RANGE { START $FF4E; END $FF4F; TYPE WordTable; };
+
+RANGE { START $FF50; END $FF55; TYPE TextTable; };
+RANGE { START $FF56; END $FF57; TYPE WordTable; };
+
+RANGE { START $FF58; END $FF5D; TYPE TextTable; };
+RANGE { START $FF5E; END $FF5F; TYPE WordTable; };
+
+RANGE { START $FF60; END $FF65; TYPE TextTable; };
+RANGE { START $FF66; END $FF67; TYPE WordTable; };
+
+RANGE { START $FF68; END $FF6D; TYPE TextTable; };
+RANGE { START $FF6E; END $FF6F; TYPE WordTable; };
+
+RANGE { START $FF70; END $FF75; TYPE TextTable; };
+RANGE { START $FF76; END $FF77; TYPE WordTable; };
+
+RANGE { START $FF78; END $FF7D; TYPE TextTable; };
+RANGE { START $FF7E; END $FF7F; TYPE WordTable; };
+
+RANGE { START $FF80; END $FF85; TYPE TextTable; };
+RANGE { START $FF86; END $FF87; TYPE WordTable; };
+
+RANGE { START $FF88; END $FF8D; TYPE TextTable; };
+RANGE { START $FF8E; END $FF8F; TYPE WordTable; };
+
+RANGE { START $FF90; END $FF95; TYPE TextTable; };
+RANGE { START $FF96; END $FF97; TYPE WordTable; };
+
+RANGE { START $FF98; END $FF9D; TYPE TextTable; };
+RANGE { START $FF9E; END $FF9F; TYPE WordTable; };
+
+RANGE { START $FFA0; END $FFA5; TYPE TextTable; };
+RANGE { START $FFA6; END $FFA7; TYPE WordTable; };
+
+RANGE { START $FFA8; END $FFAD; TYPE TextTable; };
+RANGE { START $FFAE; END $FFAF; TYPE WordTable; };
+
+RANGE { START $FFB0; END $FFB5; TYPE TextTable; };
+RANGE { START $FFB6; END $FFB7; TYPE WordTable; };
+
+RANGE { START $FFB8; END $FFBD; TYPE TextTable; };
+RANGE { START $FFBE; END $FFBF; TYPE WordTable; };
+
+RANGE { START $FFC0; END $FFC5; TYPE TextTable; };
+RANGE { START $FFC6; END $FFC7; TYPE WordTable; };
 
 
-RANGE { START $ef0a;  END   $F017;    TYPE Code;NAME "teleass_start";   COMMENT "teleass_start";  };		
-		
-RANGE { START $f018;  END   $fa00;    TYPE TextTable; NAME "str_junk2";   COMMENT "X";  };	
-		
-RANGE { START $D86F; END $D89F; TYPE TextTable; NAME "str_copyright"; COMMENT "X"; }; 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+######
+
+RANGE { START $ffc9; END $fff7; TYPE TextTable; NAME "teleass_signature"; COMMENT "Copyrights"; };
+
+
+# RANGE { START $f018;  END   $fa00;    TYPE TextTable; NAME "str_junk2";   COMMENT "X";  };
+
+RANGE { START $FFF8;  END   $FFF9;  TYPE AddrTable; NAME "signature_address";  COMMENT "Copyrights address";  };
+RANGE { START $FFFa;  END   $FFFb;  TYPE ByteTable; NAME "ROMDEF";             COMMENT "Version + ROM Type";  };
+RANGE { START $FFFC;  END   $FFFD;  TYPE AddrTable; NAME "teleass_reset";      COMMENT "RESET";  };
+RANGE { START $FFFE;  END   $FFFF;  TYPE WordTable; NAME "teleass_irq_vector"; COMMENT "IRQ Vector";  };
+
