@@ -218,33 +218,33 @@ LABEL { ADDR $cf1e; NAME "EvalDifference"; COMMENT "Evalue une différence"; };
 LABEL { ADDR $cefe; NAME "SyntaxErr";         COMMENT "Err $00"; };
 LABEL { ADDR $cf01; NAME "OutOfRangeValErr";  COMMENT "Err $0C"; };
 LABEL { ADDR $d19e; NAME "DriveErr";          COMMENT "Err $0A"; };
-LABEL { ADDR $d1a1; NAME "SyntaxErr1";         COMMENT "Err $00"; };
+LABEL { ADDR $d1a1; NAME "SyntaxErr1";        COMMENT "Err $00"; };
 LABEL { ADDR $d1a4; NAME "FileNameErr";       COMMENT "Err $09"; };
 LABEL { ADDR $d1a7; NAME "WildCardErr";       COMMENT "Err $18"; };
-LABEL { ADDR $d360; NAME "SyntaxErr2";         COMMENT "Err $00"; };
+LABEL { ADDR $d360; NAME "SyntaxErr2";        COMMENT "Err $00"; };
 LABEL { ADDR $d363; NAME "IllegalValErr";     COMMENT "Err $0B"; };
 LABEL { ADDR $d4ef; NAME "UnknSymErr";        COMMENT "Err $11"; };
-LABEL { ADDR $d5da; NAME "SyntaxErr3";         COMMENT "Err $00"; };
-LABEL { ADDR $d732; NAME "WildCardErr1";       COMMENT "Err $18"; };
-LABEL { ADDR $d799; NAME "SyntaxErr4";         COMMENT "Err $00"; };
-LABEL { ADDR $d79c; NAME "FileNameErr1";       COMMENT "Err $09"; };
-LABEL { ADDR $d83d; NAME "SyntaxErr5";         COMMENT "Err $00"; };
-LABEL { ADDR $d840; NAME "IllegalValErr2";     COMMENT "Err $0B"; };
-LABEL { ADDR $d843; NAME "OutOfRangeValErr1";  COMMENT "Err $0C"; };
+LABEL { ADDR $d5da; NAME "SyntaxErr3";        COMMENT "Err $00"; };
+LABEL { ADDR $d732; NAME "WildCardErr1";      COMMENT "Err $18"; };
+LABEL { ADDR $d799; NAME "SyntaxErr4";        COMMENT "Err $00"; };
+LABEL { ADDR $d79c; NAME "FileNameErr1";      COMMENT "Err $09"; };
+LABEL { ADDR $d83d; NAME "SyntaxErr5";        COMMENT "Err $00"; };
+LABEL { ADDR $d840; NAME "IllegalValErr2";    COMMENT "Err $0B"; };
+LABEL { ADDR $d843; NAME "OutOfRangeValErr1"; COMMENT "Err $0C"; };
 LABEL { ADDR $d846; NAME "MemFullErr";        COMMENT "Err $0D"; };
 LABEL { ADDR $d849; NAME "IllegalLabErr";     COMMENT "Err $0F (inutilisé?)"; };
 LABEL { ADDR $d84c; NAME "LabelDefErr";       COMMENT "Err $10"; };
 LABEL { ADDR $d84f; NAME "OrgDefErr";         COMMENT "Err $15"; };
-LABEL { ADDR $d852; NAME "UnknSymErr1";        COMMENT "Err $11 (inutilisé?)"; };
-LABEL { ADDR $d855; NAME "OutOfRangeBraErr2";  COMMENT "Err $12"; };
+LABEL { ADDR $d852; NAME "UnknSymErr1";       COMMENT "Err $11 (inutilisé?)"; };
+LABEL { ADDR $d855; NAME "OutOfRangeBraErr2"; COMMENT "Err $12"; };
 LABEL { ADDR $d858; NAME "IllegalAddrModErr"; COMMENT "Err $13"; };
 LABEL { ADDR $d85b; NAME "UnknOrgErr";        COMMENT "Err $14"; };
 LABEL { ADDR $e405; NAME "PrinterFormatErr";  COMMENT "Err $1A"; };
-LABEL { ADDR $e54c; NAME "FileNameErr2";       COMMENT "Err $09"; };
-LABEL { ADDR $e54f; NAME "SyntaxErr6";         COMMENT "Err $00"; };
-LABEL { ADDR $ed90; NAME "IllegalLabErr2";     COMMENT "Err $0F"; };
-LABEL { ADDR $ed93; NAME "SyntaxErr7";         COMMENT "Err $00"; };
-LABEL { ADDR $ef28; NAME "SyntaxErr8";         COMMENT "Err $00"; };
+LABEL { ADDR $e54c; NAME "FileNameErr2";      COMMENT "Err $09"; };
+LABEL { ADDR $e54f; NAME "SyntaxErr6";        COMMENT "Err $00"; };
+LABEL { ADDR $ed90; NAME "IllegalLabErr2";    COMMENT "Err $0F"; };
+LABEL { ADDR $ed93; NAME "SyntaxErr7";        COMMENT "Err $00"; };
+LABEL { ADDR $ef28; NAME "SyntaxErr8";        COMMENT "Err $00"; };
 
 
 
@@ -256,7 +256,7 @@ LABEL { ADDR $cf73; NAME "LocTblInit"; COMMENT "Initialise les pointeurs de la t
 #RANGE { START $d076; END $d078; TYPE Code; };
 
 LABEL { ADDR $d000; NAME "ExecCmd";         COMMENT "Execute command number ACC"; };
-LABEL { ADDR $d061; NAME "QUIT"; };
+LABEL { ADDR $d061; NAME "QUIT";            COMMENT "QUIT: sortie du moniteur, retour au basic par JMP $C000"; };
 LABEL { ADDR $d070; NAME "teleass_start";   COMMENT "teleass_start";  };
 
 LABEL { NAME "_CharGet"; ADDR $D0F0; COMMENT "Prends le caractère suivant en sautant les espaces (Copié en VARAPL+18)"; };
@@ -264,30 +264,32 @@ LABEL { NAME "_CharGot"; ADDR $D0F6; COMMENT "Prends le caractère courant"; };
 LABEL { NAME "_Proc1";   ADDR $D101; COMMENT "Trouver un meilleur nom (cf $04E2)"; };
 LABEL { ADDR $d120;      NAME "Clear"; COMMENT "Efface le programme et initialise les pointeurs de la table des symboles locaux"; };
 
+LABEL { ADDR $d1ac; NAME "EvalComma"; COMMENT "Evalue une ','"; };
 # Points d'entrée des commandes
-LABEL { ADDR $d1c8; NAME "LOAD"; };
+
+LABEL { ADDR $d1c8; NAME "LOAD";      COMMENT "LOAD ''NF'' (,A EN) (,V) (,N) : chargement d'un fichier (A EN->force l'adresse de chargement, V->affiche les adresses de début et fin, N->force le chargement sans exécution)"; };
 
 LABEL { ADDR $d25e; NAME "EXBNK0ERR"; COMMENT "Exécute une routine en banque 0 et affiche le code d'erreur"; };
 LABEL { ADDR $d28a; NAME "EXBNK0";    COMMENT "Exécute une routine en banque 0 (adresse en AY)"; };
 
-LABEL { ADDR $D2B9; NAME "DESAS"; };
+LABEL { ADDR $D2B9; NAME "DESAS";       COMMENT "(L)DESAS adrdeb (,adrfin) (B val) : désassemble le programme à partir de l'adress adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin si précisée"; };
 LABEL { ADDR $D2BC; NAME "LDESAS"; };
-LABEL { ADDR $D2D0; NAME "DUMP"; };
+LABEL { ADDR $D2D0; NAME "DUMP";        COMMENT "(L)DUMP adrdeb (,adrfin) (,B val) : affiche un dump de la mémoire depuis l'adress adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin si précisée"; };
 LABEL { ADDR $D2D3; NAME "LDUMP"; };
-LABEL { ADDR $D54B; NAME "LIST"; };
+LABEL { ADDR $D54B; NAME "LIST";        COMMENT "(L)LIST (numdeb) (-) (numfin) : liste le source du fichier en mémoire. numdeb et numfin sont soit des n° de ligne en décimal, soit des étiquettes"; };
 LABEL { ADDR $D550; NAME "LLIST"; };
-LABEL { ADDR $D589; NAME "RENUM"; };
-LABEL { ADDR $D68E; NAME "DIR"; };
+LABEL { ADDR $D589; NAME "RENUM";       COMMENT "RENUM (num1) (,pas) (,numdeb) (,numfin) : renumérotation des lignes de numdeb à numfin avec 'num1' nouvelle 1ère ligne et 'pas' l'incrément. numdeb et numfin peuvent être des n° de lignes en décimal ou des étiquettes"; };
+LABEL { ADDR $D68E; NAME "DIR";         COMMENT "(L)DIR (''NFA'') : affiche le contenu de la disquette"; };
 LABEL { ADDR $D691; NAME "LDIR"; };
-LABEL { ADDR $D6B2; NAME "SAVEU"; };
-LABEL { ADDR $D6B5; NAME "SAVEO"; };
-LABEL { ADDR $D6B8; NAME "SAVEM"; };
-LABEL { ADDR $D6AF; NAME "SAVE"; };
+LABEL { ADDR $D6B2; NAME "SAVEU";       COMMENT "SAVEU ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
+LABEL { ADDR $D6B5; NAME "SAVEO";       COMMENT "SAVEO ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
+LABEL { ADDR $D6B8; NAME "SAVEM";       COMMENT "SAVEM ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
+LABEL { ADDR $D6AF; NAME "SAVE";        COMMENT "SAVE ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
 
 LABEL { ADDR $d77b; NAME "GetEXTparam"; };
 LABEL { ADDR $d7a1; NAME "SetEXT"; };
 
-LABEL { ADDR $DC07; NAME "ASSEM"; };
+LABEL { ADDR $DC07; NAME "ASSEM";       COMMENT "(L)ASSEM (adrdeb) (,G) (,L) (,S) : assemble le programme en mémoire. adrdeb indique l'adresse physique à laquelle le programme est assemblé en mémoire. L'adresse d'origine du programme assemblé doit être indiquée par une directive ORG dans le source"; };
 LABEL { ADDR $DC0A; NAME "LASSEM"; };
 
 LABEL { ADDR $df0a; NAME "DispLocSym";  COMMENT "C65D 'Symboles :'/ C66B 'locaux'"; };
@@ -295,22 +297,23 @@ LABEL { ADDR $df31; NAME "DispGlobSym"; COMMENT "C65D 'Symboles :'/ C672 'globau
 LABEL { ADDR $df58; NAME "DispMonSym";  COMMENT "C65D 'Symboles :'/ C67A 'moniteur'"; };
 LABEL { ADDR $df7c; NAME "DispSymTbl";  COMMENT "VARAPL+12: Adr debut de la table, VARAPL+1: Finde la table"; };
 
-LABEL { ADDR $E037; NAME "SYOLD"; };
-LABEL { ADDR $E059; NAME "SYDEF"; };
-LABEL { ADDR $E15F; NAME "SYTAB"; };
+LABEL { ADDR $E037; NAME "SYOLD";       COMMENT "SYOLD (adrdeb, adrlim) : retrouve les symboles globaux (après sauvegarde et rechargement par exemple) et réinitialise les adresses de début et limite de la table (valeurs par défaut sinon: $3000, $3FFF)"; };
+LABEL { ADDR $E059; NAME "SYDEF";       COMMENT "SYDEF (adrdeb, adrlim (,C)) : sans option, donne les adresses de la table des symboles Globaux, sinon déplace cette table en adrdeb et fixe sa limite à ardlim. L'option C permet de recopier à partir de adrdeb les symboles globaux existants, sinon la table sera vide"; };
+LABEL { ADDR $E15F; NAME "SYTAB";       COMMENT "(L)SYTAB (,L) (,G) (,M) : liste la table des symboles (L)ocaux, (G)lobaux ou (M)oniteur par ordre alphabétique. Par défaut seule la table (G)lobale est affichée"; };
 LABEL { ADDR $E162; NAME "LSYTAB"; };
-LABEL { ADDR $E7E8; NAME "MODIF"; };
-LABEL { ADDR $E1D0; NAME "QDEC"; };
-LABEL { ADDR $E1FC; NAME "QHEX"; };
-LABEL { ADDR $E1DF; NAME "QBIN"; };
-LABEL { ADDR $E219; NAME "QCAR"; };
-LABEL { ADDR $E258; NAME "VREG"; };
-LABEL { ADDR $EA15; NAME "TRACE"; };
-LABEL { ADDR $E40A; NAME "MOVE"; };
-LABEL { ADDR $D758; NAME "DELBAK"; };
-LABEL { ADDR $D63D; NAME "DELETE"; };
-LABEL { ADDR $D73A; NAME "DEL"; };
-LABEL { ADDR $E50A; NAME "MERGE"; };
+LABEL { ADDR $E7E8; NAME "MODIF";       COMMENT "MODIF adrdeb (,B val) : modification pleine page de la mémoire à partir de l'adresse adrdeb de la banque indiquée ou celle par défaut"; };
+LABEL { ADDR $E1D0; NAME "QDEC";        COMMENT "?DEC val | ?DEC (adr) : conversion de val ou du contenu de adr en décimal"; };
+LABEL { ADDR $E1FC; NAME "QHEX";        COMMENT "?HEX val | ?HEX (adr) : conversion de val ou du contenu de adr en hexadécimal"; };
+LABEL { ADDR $E1DF; NAME "QBIN";        COMMENT "?BIN val | ?BIN (adr) : conversion de val ou du contenu de adr en binaire"; };
+LABEL { ADDR $E219; NAME "QCAR";        COMMENT "?CAR val | ?CAR (adr) : conversion de val ou du contenu de adr en caractère ASCII"; };
+LABEL { ADDR $E258; NAME "VREG";        COMMENT "VREG (,A val) (,Y val) (,X val) (,P val) : affiche ou modifie le contenu des registres du 6502"; };
+LABEL { ADDR $E26E; NAME "EvalSetReg";  COMMENT "Evalue une affectation pour un registre (A,X,Y,P), sortie: C=1 -> Ok"; };
+LABEL { ADDR $EA15; NAME "TRACE";       COMMENT "TRACE adrdeb (,S adrstop) (,E) (,H) (,N) (,A val) (...) (,B val) : exécute une routine en mode trace"; };
+LABEL { ADDR $E40A; NAME "MOVE";        COMMENT "MOVE adrdeb ,adrfin (, B val1) , adrcib (, B val2) : déplcae un bloc mémoire de adrdeb inclus à adrfin exclus vers adrcib. Si pas de banque précisée: banque par défaut"; };
+LABEL { ADDR $D758; NAME "DELBAK";      COMMENT "DELBAK : détruit tous les fichiers avec une extension '.BAK'"; };
+LABEL { ADDR $D63D; NAME "DELETE";      COMMENT "DELETE (numdeb) (-) (numfin) : supprime les lignes numdeb à numfin. numdeb et numfin peuvent être des n° de ligne en décimal ou des étiquettes"; };
+LABEL { ADDR $D73A; NAME "DEL";         COMMENT "DEL ''NFA'' : détruit un fichier (cf Stratsed)"; };
+LABEL { ADDR $E50A; NAME "MERGE";       COMMENT "MERGE ''NF'' : ajoute le fichier source ''NF'' à la suite du programme en mémoire et renumérote les lignes"; };
 
 LABEL { ADDR $E9E8; NAME "Scr0InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 0"; };
 LABEL { ADDR $E9EE; NAME "Scr1InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 1"; };
@@ -318,27 +321,43 @@ LABEL { ADDR $E9F4; NAME "Scr2InitTbl";  SIZE 6; COMMENT "Table d'initialisation
 LABEL { ADDR $E9FA; NAME "Scr0bInitTbl"; SIZE 6; COMMENT "Table d'initialisation écran 0 bis"; };
 LABEL { ADDR $EA00; NAME "Table1";       SIZE 3; COMMENT "Trouver un meilleur nom"; };
 
-LABEL { ADDR $EE94; NAME "SEEK"; };
-LABEL { ADDR $EF4A; NAME "CHANGE"; };
-LABEL { ADDR $E2A2; NAME "OLD"; };
-LABEL { ADDR $D135; NAME "NEW"; };
-LABEL { ADDR $D32C; NAME "BANK"; };
-LABEL { ADDR $E2E3; NAME "CALL"; };
-LABEL { ADDR $D765; NAME "EXT"; };
-LABEL { ADDR $E334; NAME "BYTE"; };
-LABEL { ADDR $ED14; NAME "MINAS"; };
-LABEL { ADDR $D7C1; NAME "BACKUP"; };
-LABEL { ADDR $D7DB; NAME "INIT"; };
-LABEL { ADDR $E37E; NAME "DPAGE"; };
-LABEL { ADDR $E38D; NAME "FPAGE"; };
-LABEL { ADDR $E365; NAME "SLIGNE"; };
-LABEL { ADDR $E554; NAME "QWERTY"; };
-LABEL { ADDR $E557; NAME "AZERTY"; };
-LABEL { ADDR $E55A; NAME "FRENCH"; };
-LABEL { ADDR $E55D; NAME "ACCSET"; };
-LABEL { ADDR $E560; NAME "ACCOFF"; };
-LABEL { ADDR $F005; NAME "TEXT"; };
-LABEL { ADDR $F00D; NAME "HIRES"; };
+LABEL { ADDR $EB79; NAME "TraceJMP"; COMMENT "Trace instruction JMP"; };
+LABEL { ADDR $EB8E; NAME "TraceJMPind"; COMMENT "Trace instruction JMP ()"; };
+LABEL { ADDR $EBA8; NAME "TraceJSR"; COMMENT "Trace instruction JSR"; };
+LABEL { ADDR $EBC4; NAME "TraceRTI"; COMMENT "Trace instruction RTI"; };
+LABEL { ADDR $EBD8; NAME "TraceRTS"; COMMENT "Trace instruction RTS"; };
+LABEL { ADDR $EBF4; NAME "TracePLA"; COMMENT "Trace instruction PLA"; };
+LABEL { ADDR $EC07; NAME "TracePLP"; COMMENT "Trace instruction PLP"; };
+LABEL { ADDR $EC15; NAME "TracePHA"; COMMENT "Trace instruction PHA"; };
+LABEL { ADDR $EC1F; NAME "TracePHP"; COMMENT "Trace instruction PHP"; };
+
+LABEL { ADDR $EE94; NAME "SEEK";     COMMENT "SEEK ''chaine'' (,L) : recherche la chiane entre double-quotes et indique le nombre d'occurences. Si l'option 'L' est précisée, affiche aussi les lignes correspondantes"; };
+
+LABEL { ADDR $EF14; NAME "EvalString"; COMMENT "Evalue une chaine entre double quotes"; };
+
+LABEL { ADDR $EF4A; NAME "CHANGE";     COMMENT "CHANGE ''chaine1'',''chaine2'' : remplace toutes les occurences de chaine1 par chaine2. Les chaines peuvent contenir des double-quotes"; };
+LABEL { ADDR $E2A2; NAME "OLD";         COMMENT "OLD : réactive le programme source en mémoire (après un NEW)"; };
+LABEL { ADDR $D135; NAME "NEW" ;        COMMENT "NEW : efface le programme source en mémoire"; };
+LABEL { ADDR $D32C; NAME "BANK";       COMMENT "BANK (val) : sélectionne la banque par défaut (0 à 7, 0 par défaut)"; };
+LABEL { ADDR $E2E3; NAME "CALL";       COMMENT "CALL adrdeb (B val) (,A val) (,Y val) (,X val) (P val) : exécute la routine adrdeb de la banque indiquée, ou de celle par défaut, en pré-chargeant éventuellement les registres du 6502. Les registres peuvent aussi être pré-chargés par la commande VREG"; };
+LABEL { ADDR $D765; NAME "EXT";        COMMENT "EXT (''ext'') : affiche ou modifie l'extension par défaut (3 caractères maxi)"; };
+
+LABEL { ADDR $E334; NAME "BYTES";  COMMENT "BYTES adrdeb ,val1 (,val2...) : place les valeurs val1,... en mémoire à partir de l'adresse adrdeb. Les valeurs sur 2 octets sont stockées en mode LSB,MSB (COMMANDE NON DOCUMENTEE)"; };
+
+LABEL { ADDR $ED14; NAME "MINAS";  COMMENT "MINAS adrdeb : mini-assembleur ligne par ligne. Fin par saisie d'une ligne vide"; };
+LABEL { ADDR $D7C1; NAME "BACKUP"; COMMENT "BACKUP : copie l'intégralité de la disquette (cf Stratsed)"; };
+LABEL { ADDR $D7DB; NAME "INIT";   COMMENT "INIT : initialise et formatte une disquette (cf Stratsed)" ; };
+LABEL { ADDR $E37E; NAME "DPAGE";  COMMENT "DPAGE : effectue un saut de page"; };
+LABEL { ADDR $E38D; NAME "FPAGE";  COMMENT "FPAGE (LPRFY) (,LPRSY) : affiche ou initialise le nombre de lignes par page (LPRFY) et le n° de ligne pour le saut de page (LPRSY)"; };
+LABEL { ADDR $E365; NAME "SLIGNE"; COMMENT "SLIGNE : effectue un saut de ligne à chaque appui sur <RETURN>, autre touche arrête le processus"; };
+LABEL { ADDR $E554; NAME "QWERTY"; COMMENT "QWERTY : idem BASIC"; };
+LABEL { ADDR $E557; NAME "AZERTY"; COMMENT "AZERTY : idem BASIC"; };
+LABEL { ADDR $E55A; NAME "FRENCH"; COMMENT "FRENCH : idem BASIC"; };
+LABEL { ADDR $E55D; NAME "ACCSET"; COMMENT "ACCSET : idem BASIC"; };
+LABEL { ADDR $E560; NAME "ACCOFF"; COMMENT "ACCOFF : idem BASIC"; };
+
+LABEL { ADDR $F005; NAME "TEXT";   COMMENT "TEXT : passe en mode TEXT (COMMANDE NON DOCUMENTEE)"; };
+LABEL { ADDR $F00D; NAME "HIRES";  COMMENT "HIRES : passe en mode HIRES  (COMMANDE NON DOCUMENTEE)"; };
 
 
 
