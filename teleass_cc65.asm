@@ -1,5 +1,5 @@
 ; da65 V2.17 - Git 334e30c
-; Created:    2018-05-11 20:13:32
+; Created:    2018-05-12 02:06:37
 ; Input file: original/teleass.rom
 ; Page:       1
 
@@ -26,15 +26,15 @@ TR6             = $0012
 DEFAFF          = $0014
 ADSCR           = $0026
 HRSY            = $0047
-XLPRBI          = $0048
+XLPRBI          = $0048                        ; Printer flag (b7)
 HRSX40          = $0049
 HRSX6           = $004A
 HRS1            = $004D
 HRS2            = $004F
 HRS3            = $0051
 HRS4            = $0053
-INDIC0          = $0055
-INDIC2          = $0057
+INDIC0          = $0055                        ; Also HRS5
+INDIC2          = $0057                        ; Also HRSFB
 SCEDEB          = $005C
 SCEFIN          = $005E
 VARLNG          = $008C
@@ -57,8 +57,8 @@ FLGKBD          = $0275
 KBDSHT          = $0278
 LPRX            = $0286
 LPRY            = $0287
-LPRFY           = $0289
-LPRSY           = $028B
+LPRFY           = $0289                        ; Nombre de lignes par page pour l'imprimante
+LPRSY           = $028B                        ; N° de ligne pour le saur de page
 VNMI            = $02F4
 VAPLIC          = $02FD
 V1DRB           = $0300
@@ -77,12 +77,12 @@ V2DRA           = $0321
 EXBNK           = $040C
 VEXBNK          = $0414
 BNKCIB          = $0417
-DEFBNK          = $04E0
-Proc1           = $04E2
-Ptr1            = $04EE
-Ptr2            = $04F0
-Flags           = $04F2
-Proc2           = $04F4
+DEFBNK          = $04E0                        ; Banque par défaut
+Proc1           = $04E2                        ; Trouver un meilleur nom (cf $D101)
+Ptr1            = $04EE                        ; Trouver un meilleur nom
+Ptr2            = $04F0                        ; Trouver un meilleur nom
+Flags           = $04F2                        ; b6: Trace, aussi utilisé comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)
+Proc2           = $04F4                        ; Copie de LEA0F-LEA14 (Trouver un meilleur nom)
 DRIVE           = $0500
 ERRNB           = $0512
 SAVES           = $0513
@@ -90,7 +90,7 @@ BUFNOM          = $0517
 VSALO0          = $0528
 VSALO1          = $0529
 FTYPE           = $052C
-INPIS           = $052D
+INPIS           = $052D                        ; Also DESALO
 INSEC           = $052E
 PARPIS          = $052F
 PARSEC          = $0530
@@ -663,7 +663,7 @@ LC716:  pha
         cmp     #$20
         bcc     LC726
         .byte   $2C
-LC726:  lda     #$20
+LC726:  lda     #" "
 LC728:  BRK_TELEMON XWR0
         pla
         rts
@@ -681,7 +681,7 @@ LC72D:  jsr     DispSpace
 ; ----------------------------------------------------------------------------
 ; Display a space
 DispSpace:
-        lda     #$20
+        lda     #" "
         BRK_TELEMON XWR0
         rts
 
@@ -935,7 +935,7 @@ LC88B:  bit     FLGTEL
         lda     #$00
         ldy     #$01
         jsr     LC879
-        lda     #$18
+        lda     #CAN
         BRK_TELEMON XWR0
         pla
         tay
@@ -955,9 +955,9 @@ LC8B4:  BRK_TELEMON XRD0
         beq     LC8D0
         cmp     #$03
         beq     LC8D0
-        cmp     #$20
+        cmp     #" "
         bne     LC8CF
-        jsr     LC8D1
+        jsr     GetKey
         cmp     #$1B
         beq     LC8D0
         cmp     #$03
@@ -966,7 +966,8 @@ LC8CF:  clc
 LC8D0:  rts
 
 ; ----------------------------------------------------------------------------
-LC8D1:  ldx     #$00
+; Attend un caractère au clavier
+GetKey: ldx     #$00
         BRK_TELEMON XCSSCR
         BRK_TELEMON XRDW0
         pha
@@ -1086,7 +1087,7 @@ LC98D:  inx
         lda     BUFEDT,x
         bit     VARAPL+5
         bmi     LC9AF
-        cmp     #$22
+        cmp     #'"'
         bne     LC9A1
         pha
         lda     VARAPL+5
@@ -1095,9 +1096,9 @@ LC98D:  inx
         pla
 LC9A1:  bit     VARAPL+5
         bvs     LC9AF
-        cmp     #$20
+        cmp     #" "
         beq     LC98D
-        cmp     #$27
+        cmp     #"'"
         bne     LC9AF
 LC9AD:  ror     VARAPL+5
 LC9AF:  iny
@@ -1111,7 +1112,8 @@ LC9BA:  bne     LC98D
         rts
 
 ; ----------------------------------------------------------------------------
-LC9BF:  cmp     #$61
+; Converti un caractère alpha minuscule en MAJUSCULE
+min_MAJ:cmp     #$61
         bcc     LC9CC
         sbc     #$7B
         sec
@@ -1138,7 +1140,7 @@ LC9E3:  inx
         bne     LC9EA
         inc     VARAPL+9
 LC9EA:  lda     BUFEDT,x
-        jsr     LC9BF
+        jsr     min_MAJ
         sec
         sbc     (VARAPL+8),y
         beq     LC9E3
@@ -1180,7 +1182,7 @@ LCA2D:  ldx     #$FF
 LCA2F:  inx
 LCA30:  lda     BUFEDT,x
         beq     LCA39
-        cmp     #$20
+        cmp     #" "
         beq     LCA2F
 LCA39:  rts
 
@@ -1257,7 +1259,7 @@ LCA9E:  iny
         lda     (VARAPL+12),y
         beq     LCADB
         bmi     LCAAF
-        cmp     #$27
+        cmp     #"'"
         bne     LCA9E
         ldx     #$07
         stx     VARAPL+1
@@ -1265,14 +1267,14 @@ LCA9E:  iny
 LCAAF:  iny
         lda     (VARAPL+12),y
         beq     LCADB
-        cmp     #$22
+        cmp     #'"'
         bne     LCAC0
         pha
         lda     VARAPL+5
         eor     #$80
         sta     VARAPL+5
         pla
-LCAC0:  cmp     #$27
+LCAC0:  cmp     #"'"
         beq     LCAC9
 LCAC4:  dex
         inc     VARAPL+1
@@ -1288,15 +1290,15 @@ LCAD2:  lda     (VARAPL+12),y
         iny
         bne     LCAD2
 LCADB:  lda     VARAPL+1
-        cmp     #$27
+        cmp     #"'"
         bcc     LCAEF
         pha
-        lda     #$0B
+        lda     #VT
         BRK_TELEMON XWR0
         pla
-        cmp     #$4E
+        cmp     #"N"
         bcc     LCAEF
-        lda     #$0B
+        lda     #VT
         BRK_TELEMON XWR0
 LCAEF:  pla
         tay
@@ -1332,14 +1334,14 @@ LCB20:  jsr     PutMnemo
 LCB2B:  iny
         lda     (VARAPL+12),y
         beq     LCB59
-        cmp     #$22
+        cmp     #'"'
         bne     LCB3C
         pha
         lda     VARAPL+5
         eor     #$80
         sta     VARAPL+5
         pla
-LCB3C:  cmp     #$27
+LCB3C:  cmp     #"'"
         beq     LCB46
 LCB40:  dex
         BRK_TELEMON XWR0
@@ -1622,14 +1624,16 @@ LCD26:  jsr     CharGet
 LCD2B:  rts
 
 ; ----------------------------------------------------------------------------
-LCD2C:  ldx     #$00
+; Saisie d'un nombre en binaire (%011011), maxi 2 octets
+EvalBinWord:
+        ldx     #$00
         stx     VARAPL+3
         stx     VARAPL+4
 LCD32:  jsr     CharGet
         bcs     LCD2B
-        cmp     #$31
+        cmp     #"1"
         beq     LCD40
-        cmp     #$30
+        cmp     #"0"
         bne     LCD2B
         clc
 LCD40:  rol     VARAPL+3
@@ -1662,7 +1666,7 @@ LCD62:  jsr     CharGet
         rts
 
 ; ----------------------------------------------------------------------------
-LCD6E:  jsr     LC9BF
+LCD6E:  jsr     min_MAJ
         cmp     #$80
         bcs     LCD86
         ora     #$80
@@ -1689,9 +1693,9 @@ LCD87:  tya
 LCD94:  ldx     TXTPTR+1
         cpx     #$05
         bne     LCD9E
-        cmp     #$23
+        cmp     #"#"
         beq     LCDA2
-LCD9E:  cmp     #$24
+LCD9E:  cmp     #"$"
         bne     LCDB1
 LCDA2:  ldy     #$01
         lda     (TXTPTR),y
@@ -1701,15 +1705,15 @@ LCDA2:  ldy     #$01
         jmp     LCDD3
 
 ; ----------------------------------------------------------------------------
-LCDB1:  cmp     #$25
+LCDB1:  cmp     #"%"
         bne     LCDC7
         ldy     #$01
         lda     (TXTPTR),y
-        cmp     #$30
+        cmp     #"0"
         beq     LCDC1
-        cmp     #$31
+        cmp     #"1"
         bne     LCDDC
-LCDC1:  jsr     LCD2C
+LCDC1:  jsr     EvalBinWord
         jmp     LCDD3
 
 ; ----------------------------------------------------------------------------
@@ -1754,11 +1758,11 @@ LCDFD:  iny
         lda     (TXTPTR),y
         bit     VARAPL+5
         bpl     LCE0B
-        jsr     LC9BF
+        jsr     min_MAJ
 LCE0B:  cmp     (VARAPL+12),y
         beq     LCDFD
         lda     (VARAPL+12),y
-        cmp     #$20
+        cmp     #" "
         bne     LCE1C
         lda     (TXTPTR),y
         jsr     LC91A
@@ -1838,7 +1842,7 @@ IncTXTPTR:
 LCE8F:  rts
 
 ; ----------------------------------------------------------------------------
-LCE90:  cmp     #$22
+LCE90:  cmp     #'"'
         bne     LCEB3
         sty     VARAPL
         ldy     #$01
@@ -1847,7 +1851,7 @@ LCE90:  cmp     #$22
         sta     VARAPL+3
         iny
         lda     (TXTPTR),y
-        cmp     #$22
+        cmp     #'"'
         bne     LCEA6
         iny
 LCEA6:  jsr     IncTXTPTR
@@ -1858,21 +1862,21 @@ LCEA6:  jsr     IncTXTPTR
         rts
 
 ; ----------------------------------------------------------------------------
-LCEB3:  cmp     #$3C
+LCEB3:  cmp     #"<"
         bne     LCEC4
         jsr     CharGet
         jsr     LCD87
-        bcc     OutOfRangeValErr
+        bcc     LCF03
         ldx     #$00
         stx     VARAPL+4
         rts
 
 ; ----------------------------------------------------------------------------
-LCEC4:  cmp     #$3E
+LCEC4:  cmp     #">"
         bne     LCED9
         jsr     CharGet
         jsr     LCD87
-        bcc     OutOfRangeValErr
+        bcc     LCF03
         ldx     VARAPL+4
         stx     VARAPL+3
         ldx     #$00
@@ -1881,25 +1885,27 @@ LCEC4:  cmp     #$3E
 
 ; ----------------------------------------------------------------------------
 LCED9:  jsr     LCD87
-        bcc     OutOfRangeValErr
+        bcc     LCF03
         rts
 
 ; ----------------------------------------------------------------------------
-LCEDF:  jsr     LCE90
+; Evalue une expression
+EvalExpr:
+        jsr     LCE90
         ldx     VARAPL+3
         stx     VARAPL+14
         ldx     VARAPL+4
         stx     VARAPL+15
-LCEEA:  cmp     #$2B
+LCEEA:  cmp     #"+"
         bne     LCEF4
-        jsr     LCF06
+        jsr     EvalSomme
         bne     LCEEA
 LCEF3:  rts
 
 ; ----------------------------------------------------------------------------
-LCEF4:  cmp     #$2D
+LCEF4:  cmp     #"-"
         bne     LCEF3
-        jsr     LCF1E
+        jsr     EvalDifference
         jmp     LCEEA
 
 ; ----------------------------------------------------------------------------
@@ -1907,13 +1913,15 @@ LCEF4:  cmp     #$2D
 SyntaxErr:
         ldx     #$00
         .byte   $2C
-LCF01:  ldx     #$0C
 ; Err $0C
 OutOfRangeValErr:
-        jmp     LCF98
+        ldx     #$0C
+LCF03:  jmp     LCF98
 
 ; ----------------------------------------------------------------------------
-LCF06:  jsr     CharGet
+; Evalue une somme
+EvalSomme:
+        jsr     CharGet
         jsr     LCE90
         pha
         clc
@@ -1924,11 +1932,13 @@ LCF06:  jsr     CharGet
         adc     VARAPL+4
         sta     VARAPL+15
         pla
-        bcs     LCF01
+        bcs     OutOfRangeValErr
         rts
 
 ; ----------------------------------------------------------------------------
-LCF1E:  jsr     CharGet
+; Evalue une différence
+EvalDifference:
+        jsr     CharGet
         jsr     LCE90
         pha
         sec
@@ -1939,7 +1949,7 @@ LCF1E:  jsr     CharGet
         sbc     VARAPL+4
         sta     VARAPL+15
         pla
-        bcc     LCF01
+        bcc     OutOfRangeValErr
         rts
 
 ; ----------------------------------------------------------------------------
@@ -1971,17 +1981,17 @@ LCF40:  clc
 SetTXTPTR:
         clc
         txa
-        adc     #$90
+        adc     #<BUFEDT
         sta     TXTPTR
-        lda     #$05
+        lda     #>BUFEDT
         adc     #$00
         sta     TXTPTR+1
         rts
 
 ; ----------------------------------------------------------------------------
-LCF60:  lda     #$90
+LCF60:  lda     #<BUFEDT
         sta     TR0
-        lda     #$05
+        lda     #>BUFEDT
         sta     TR1
         lda     VARAPL+16
         sta     RES
@@ -2096,7 +2106,7 @@ LD010:  cmp     #$03
 LD027:  cmp     #$0B
         bne     LD040
         BRK_TELEMON XWR0
-        lda     #$0D
+        lda     #CR
         BRK_TELEMON XWR0
         lda     VARAPL+16
         ldy     VARAPL+17
@@ -2115,7 +2125,7 @@ LD04C:  jsr     LCF60
         jmp     LCFCB
 
 ; ----------------------------------------------------------------------------
-LD052:  lda     #$0B
+LD052:  lda     #VT
         BRK_TELEMON XWR0
         jsr     DispErrorX
         tax
@@ -2137,10 +2147,10 @@ teleass_start:
         lda     #<Menu_str
         ldy     #>Menu_str
         BRK_TELEMON XWSTR0
-LD076:  jsr     LC8D1
-        cmp     #$31
+LD076:  jsr     GetKey
+        cmp     #"1"
         beq     LD05D
-        cmp     #$32
+        cmp     #"2"
         bne     LD076
         BRK_TELEMON XWR0
         BRK_TELEMON XCRLF
@@ -2202,7 +2212,7 @@ _CharGet:
 ; Prends le caractère courant
 _CharGot:
         lda     teleass_irq_vector+1
-        cmp     #$20
+        cmp     #" "
         beq     _CharGet
         jsr     LD10D
         rts
@@ -2223,9 +2233,9 @@ _Proc1: lda     teleass_irq_vector+1
 ; ----------------------------------------------------------------------------
 LD10D:  cmp     #$00
         beq     LD11F
-        cmp     #$27
+        cmp     #"'"
         beq     LD11F
-        cmp     #$3A
+        cmp     #"9"+1
         bcs     LD11F
         sec
         sbc     #$30
@@ -2255,7 +2265,7 @@ NEW:    tax
 
 ; ----------------------------------------------------------------------------
 LD13E:  ldy     #$00
-        cmp     #$22
+        cmp     #'"'
         bne     LD14A
         jsr     CharGet
         tax
@@ -2266,9 +2276,9 @@ LD14A:  lda     TXTPTR
         pha
 LD150:  lda     (TXTPTR),y
         beq     LD161
-        cmp     #$2C
+        cmp     #","
         beq     LD161
-        cmp     #$22
+        cmp     #'"'
         beq     LD161
         iny
         bne     LD150
@@ -2276,7 +2286,7 @@ LD150:  lda     (TXTPTR),y
 LD161:  tya
         tax
         lda     (TXTPTR),y
-        cmp     #$22
+        cmp     #'"'
         bne     LD16A
         iny
 LD16A:  jsr     IncTXTPTR
@@ -2330,10 +2340,10 @@ WildCardErr:
 LD1A9:  jmp     LCF98
 
 ; ----------------------------------------------------------------------------
-LD1AC:  cmp     #$2C
+LD1AC:  cmp     #","
         bne     SyntaxErr1
         jsr     CharGet
-        jsr     LC9BF
+        jsr     min_MAJ
         tax
         beq     SyntaxErr1
         rts
@@ -2353,7 +2363,7 @@ LD1CD:  jsr     CharGot
         tax
 LD1D1:  beq     LD208
         jsr     LD1AC
-        cmp     #$56
+        cmp     #"V"
         bne     LD1ED
         lda     #$40
 LD1DC:  pha
@@ -2366,11 +2376,11 @@ LD1DC:  pha
         jmp     LD1D1
 
 ; ----------------------------------------------------------------------------
-LD1ED:  cmp     #$4E
+LD1ED:  cmp     #"N"
         bne     LD1F5
         lda     #$80
         bne     LD1DC
-LD1F5:  cmp     #$41
+LD1F5:  cmp     #"A"
         bne     SyntaxErr1
         lda     VSALO1
         bne     SyntaxErr1
@@ -2431,7 +2441,7 @@ LD266:  rts
 
 ; ----------------------------------------------------------------------------
 LD267:  jsr     CharGet
-LD26A:  jsr     LCEDF
+LD26A:  jsr     EvalExpr
         tax
         lda     VARAPL+14
         ldy     VARAPL+15
@@ -2544,10 +2554,10 @@ LD339:  stx     DEFBNK
 
 ; ----------------------------------------------------------------------------
 LD33F:  jsr     LD1AC
-LD342:  cmp     #$42
+LD342:  cmp     #"B"
         bne     SyntaxErr2
 LD346:  jsr     CharGet
-LD349:  jsr     LCEDF
+LD349:  jsr     EvalExpr
         ldx     VARAPL+14
         ldy     VARAPL+15
         bne     IllegalValErr
@@ -2584,7 +2594,7 @@ LD368:  jsr     LD26A
         txa
         beq     LD3A4
         jsr     LD1AC
-        cmp     #$42
+        cmp     #"B"
         bne     LD38F
         jsr     LD346
         jmp     LD39E
@@ -2663,7 +2673,7 @@ LD408:  ldy     #$05
         beq     LD481
         cmp     #$C1
         bne     LD42D
-        lda     #$24
+        lda     #"$"
         BRK_TELEMON XWR0
         jsr     LD3AE
         txa
@@ -2671,12 +2681,12 @@ LD408:  ldy     #$05
         beq     LD481
 LD42D:  bit     INDIC0
         bpl     LD435
-        lda     #$23
+        lda     #"#"
         bne     LD439
 LD435:  bvc     LD43B
-        lda     #$28
+        lda     #"("
 LD439:  BRK_TELEMON XWR0
-LD43B:  lda     #$24
+LD43B:  lda     #"$"
         BRK_TELEMON XWR0
         ldx     INDIC0+1
         lda     HRS4
@@ -2693,28 +2703,28 @@ LD450:  lda     INDIC0
         asl
         bpl     LD460
         pha
-        lda     #$29
+        lda     #")"
         BRK_TELEMON XWR0
         pla
 LD460:  asl
         bpl     LD46D
         pha
-        lda     #$2C
+        lda     #","
         BRK_TELEMON XWR0
-        lda     #$58
+        lda     #"X"
         BRK_TELEMON XWR0
         pla
 LD46D:  asl
         bpl     LD47A
         pha
-        lda     #$2C
+        lda     #","
         BRK_TELEMON XWR0
-        lda     #$59
+        lda     #"Y"
         BRK_TELEMON XWR0
         pla
 LD47A:  asl
         bpl     LD481
-        lda     #$29
+        lda     #")"
         BRK_TELEMON XWR0
 LD481:  rts
 
@@ -2772,11 +2782,11 @@ LD4D6:  cpy     #$06
         beq     LD4EA
         lda     (TXTPTR),y
         beq     LD4EA
-        cmp     #$2D
+        cmp     #"-"
         beq     LD4EA
-        cmp     #$2C
+        cmp     #","
         beq     LD4EA
-        cmp     #$20
+        cmp     #" "
         bne     LD4C0
 LD4EA:  pla
         pla
@@ -2797,7 +2807,7 @@ LD4F4:  lda     #$00
         tax
         beq     LD53F
         bcc     LD50F
-        cmp     #$2D
+        cmp     #"-"
         beq     LD521
         jsr     LD482
         jmp     LD514
@@ -2809,7 +2819,7 @@ LD514:  jsr     LCC31
         jsr     CharGot
         tax
         beq     LD53F
-        cmp     #$2D
+        cmp     #"-"
         bne     LD531
 LD521:  jsr     CharGet
         tax
@@ -2889,7 +2899,7 @@ RENUM:  pha
         ldy     #$00
         pla
         beq     LD5E7
-LD5A4:  cmp     #$2C
+LD5A4:  cmp     #","
         beq     LD5DF
         sty     VARAPL+7
         jsr     CharGot
@@ -2914,7 +2924,7 @@ LD5C1:  pha
         sta     DECDEB,y
         pla
         beq     LD5E7
-        cmp     #$2C
+        cmp     #","
         beq     LD5E0
 ; Err $00
 SyntaxErr3:
@@ -3067,13 +3077,13 @@ SAVEM:  ldx     #$40
         tax
         beq     LD72B
         jsr     LD1AC
-        cmp     #$41
+        cmp     #"A"
         bne     LD6AC
         lda     #$40
         sta     FTYPE
         jsr     LD273
         jsr     LD1AC
-        cmp     #$45
+        cmp     #"E"
         bne     LD6AC
         jsr     LD267
         sta     PARPIS
@@ -3081,7 +3091,7 @@ SAVEM:  ldx     #$40
         txa
         beq     LD72B
         jsr     LD1AC
-        cmp     #$54
+        cmp     #"T"
         bne     LD6AC
         lda     #$41
         sta     FTYPE
@@ -3143,7 +3153,7 @@ LD76E:  lda     EXTDEF,y
 
 ; ----------------------------------------------------------------------------
 GetEXTparam:
-        cmp     #$22
+        cmp     #'"'
         bne     LD784
         ldy     #$01
         jsr     IncTXTPTR
@@ -3151,9 +3161,9 @@ LD784:  ldy     #$FF
 LD786:  iny
         lda     (TXTPTR),y
         beq     SetEXT
-        cmp     #$22
+        cmp     #'"'
         beq     SetEXT
-        jsr     LC9BF
+        jsr     min_MAJ
         sta     BUFTRV,y
         cpy     #$03
         bne     LD786
@@ -3169,7 +3179,7 @@ FileNameErr1:
 ; ----------------------------------------------------------------------------
 SetEXT: cpy     #$03
         bne     FileNameErr1
-        cmp     #$22
+        cmp     #'"'
         bne     LD7AA
         iny
 LD7AA:  jsr     IncTXTPTR
@@ -3241,7 +3251,7 @@ LD80E:  lda     Ptr1+1
 LD827:  ldy     #$00
         lda     (TXTPTR),y
         beq     LD831
-        cmp     #$27
+        cmp     #"'"
         bne     SyntaxErr5
 LD831:  rts
 
@@ -3302,7 +3312,7 @@ LD860:  jsr     LocSymLookup
         bcs     LabelDefErr
         bit     HRSY
         bpl     LD891
-        cmp     #$2E
+        cmp     #"."
         beq     LD891
 LD86D:  jsr     GlobSymLookup
         bcs     LD8C6
@@ -3380,7 +3390,7 @@ LD8EC:  lda     VARAPL+12
         lda     VARAPL+13
         pha
         jsr     CharGet
-        jsr     LCEDF
+        jsr     EvalExpr
         pla
         sta     VARAPL+13
         pla
@@ -3404,14 +3414,14 @@ LD912:  jsr     CharGet
         ldx     #$FF
         tay
         beq     LD91E
-        cmp     #$27
+        cmp     #"'"
         bne     LD922
 LD91E:  lda     #$00
         beq     LD996
-LD922:  cmp     #$23
+LD922:  cmp     #"#"
         bne     LD936
         jsr     CharGet
-        jsr     LCEDF
+        jsr     EvalExpr
         ldx     VARAPL+15
         bne     LD90F
         ldx     #$81
@@ -3419,31 +3429,31 @@ LD922:  cmp     #$23
         bne     LD97F
 LD936:  ldx     #$01
         stx     INDIC0
-        cmp     #$28
+        cmp     #"("
         bne     LD946
         lda     #$40
         jsr     LD9A0
         jsr     CharGet
-LD946:  jsr     LCEDF
-        cmp     #$29
+LD946:  jsr     EvalExpr
+        cmp     #")"
         bne     LD955
         lda     #$20
         jsr     LD9A0
         jsr     CharGet
-LD955:  cmp     #$2C
+LD955:  cmp     #","
         bne     LD97F
         jsr     CharGet
-        cmp     #$58
+        cmp     #"X"
         bne     LD967
         lda     #$10
         jsr     LD9A0
         bne     LD970
-LD967:  cmp     #$59
+LD967:  cmp     #"Y"
         bne     LD90C
         lda     #$08
         jsr     LD9A0
 LD970:  jsr     CharGet
-        cmp     #$29
+        cmp     #")"
         bne     LD97F
         lda     #$04
         jsr     LD9A0
@@ -3474,15 +3484,15 @@ LD9A0:  ora     INDIC0
 
 ; ----------------------------------------------------------------------------
 LD9A5:  jsr     CharGet
-        cmp     #$2B
+        cmp     #"+"
         bne     LD9B1
-        jsr     LCF06
+        jsr     EvalSomme
         bcc     LD9BD
-LD9B1:  cmp     #$2D
+LD9B1:  cmp     #"-"
         bne     LD9BA
-        jsr     LCF1E
+        jsr     EvalDifference
         bcs     LD9BD
-LD9BA:  jsr     LCEDF
+LD9BA:  jsr     EvalExpr
 LD9BD:  jmp     LD827
 
 ; ----------------------------------------------------------------------------
@@ -3521,7 +3531,7 @@ LD9F2:  lda     #$C1
 LD9FA:  ldy     #$00
 LD9FC:  jsr     CharGet
         iny
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         lda     VARAPL+15
         jsr     LCCDB
@@ -3531,13 +3541,13 @@ LD9FC:  jsr     CharGet
         jsr     LCCD2
         pla
         beq     LDA57
-        cmp     #$27
+        cmp     #"'"
         bne     LD9FC
         beq     LDA57
 LDA1D:  ldy     #$00
 LDA1F:  jsr     CharGet
         iny
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         lda     VARAPL+14
         jsr     LCCDB
@@ -3547,18 +3557,18 @@ LDA1F:  jsr     CharGet
         jsr     LCCD2
         pla
         beq     LDA57
-        cmp     #$27
+        cmp     #"'"
         bne     LDA1F
         beq     LDA57
 LDA40:  ldy     #$00
 LDA42:  jsr     CharGet
         iny
-        jsr     LCEDF
+        jsr     EvalExpr
         tax
         beq     LDA57
-        cmp     #$27
+        cmp     #"'"
         beq     LDA57
-        cmp     #$2C
+        cmp     #","
         beq     LDA42
 LDA54:  jmp     SyntaxErr5
 
@@ -3573,10 +3583,10 @@ LDA5B:  lda     #$00
 ; ----------------------------------------------------------------------------
 LDA62:  ldy     #$00
 LDA64:  jsr     CharGet
-        cmp     #$22
+        cmp     #'"'
         beq     LDA84
         iny
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         lda     VARAPL+15
         beq     LDA77
@@ -3585,9 +3595,9 @@ LDA64:  jsr     CharGet
 ; ----------------------------------------------------------------------------
 LDA77:  pla
         beq     LDAA0
-LDA7A:  cmp     #$27
+LDA7A:  cmp     #"'"
         beq     LDAA0
-        cmp     #$2C
+        cmp     #","
         beq     LDA64
         bne     LDA54
 LDA84:  dey
@@ -3597,7 +3607,7 @@ LDA89:  iny
         inc     VARAPL
         lda     (TXTPTR),y
         beq     LDA95
-        cmp     #$22
+        cmp     #'"'
         bne     LDA89
         iny
 LDA95:  jsr     IncTXTPTR
@@ -3609,17 +3619,17 @@ LDAA0:  sty     VARAPL+14
         beq     LDA5B
 LDAA4:  ldy     #$00
 LDAA6:  jsr     CharGet
-        cmp     #$22
+        cmp     #'"'
         beq     LDAC3
         iny
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         lda     VARAPL+14
         jsr     LCCDB
         jsr     LCCD2
         pla
         beq     LDAA0
-LDABD:  cmp     #$27
+LDABD:  cmp     #"'"
         bne     LDAA6
         beq     LDAA0
 LDAC3:  dey
@@ -3629,7 +3639,7 @@ LDAC8:  iny
         inc     VARAPL
         lda     (TXTPTR),y
         beq     LDADD
-        cmp     #$22
+        cmp     #'"'
         beq     LDADC
         jsr     LCCDB
         jsr     LCCD2
@@ -3644,7 +3654,7 @@ LDADD:  jsr     IncTXTPTR
         bne     LDABD
         beq     LDAA0
 LDAEA:  jsr     CharGet
-        jsr     LCEDF
+        jsr     EvalExpr
         jsr     LD827
         jmp     LCCA1
 
@@ -3728,14 +3738,14 @@ LDB77:  pha
 LDB8F:  lda     #$00
         sta     VARAPL+7
 LDB93:  jsr     CharGet
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         ldy     VARAPL+14
         lda     VARAPL+15
         jsr     LDB38
         pla
         beq     LDBA8
-        cmp     #$27
+        cmp     #"'"
         bne     LDB93
 LDBA8:  rts
 
@@ -3745,14 +3755,14 @@ LDBA9:  lda     #$00
         ldy     #$FF
 LDBAF:  iny
         jsr     CharGet
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         lda     VARAPL+14
         ldy     VARAPL+15
         jsr     LDB38
         pla
         beq     LDBC5
-        cmp     #$27
+        cmp     #"'"
         bne     LDBAF
 LDBC5:  rts
 
@@ -3760,15 +3770,15 @@ LDBC5:  rts
 LDBC6:  lda     #$00
         sta     VARAPL+7
 LDBCA:  jsr     CharGet
-        cmp     #$22
+        cmp     #'"'
         beq     LDBE2
-        jsr     LCEDF
+        jsr     EvalExpr
         pha
         lda     VARAPL+14
         jsr     LDB77
         pla
 LDBDB:  beq     LDBE1
-        cmp     #$27
+        cmp     #"'"
         bne     LDBCA
 LDBE1:  rts
 
@@ -3777,7 +3787,7 @@ LDBE2:  ldy     #$00
 LDBE4:  iny
         lda     (TXTPTR),y
         beq     LDBF7
-        cmp     #$22
+        cmp     #'"'
         beq     LDBF6
         sty     VARAPL+6
         jsr     LDB77
@@ -3816,7 +3826,7 @@ LASSEM: ldx     #$80
         jsr     DispBank
         pla
         beq     LDC64
-        cmp     #$2C
+        cmp     #","
         beq     LDC46
         jsr     LD26A
         beq     LDC01
@@ -3830,15 +3840,15 @@ LDC43:  jsr     CharGet
 LDC46:  tax
         beq     LDC64
         jsr     LD1AC
-        cmp     #$4C
+        cmp     #"L"
         bne     LDC54
         ror     HRSX40
         bmi     LDC43
-LDC54:  cmp     #$47
+LDC54:  cmp     #"G"
         bne     LDC5C
         ror     HRSY
         bmi     LDC43
-LDC5C:  cmp     #$53
+LDC5C:  cmp     #"S"
         bne     LDC04
         ror     HRSX6
         bmi     LDC43
@@ -3858,7 +3868,7 @@ LDC7D:  jsr     LD7EE
         beq     LDC97
         jsr     LD7FA
         bmi     LDC8E
-        cmp     #$27
+        cmp     #"'"
         beq     LDC7D
         jsr     LD860
 LDC8E:  cmp     #$BC
@@ -3996,11 +4006,11 @@ LDD44:  BRK_TELEMON XCRLF
         lda     #<O_N_str
         ldy     #>O_N_str
         BRK_TELEMON XWSTR0
-LDDA7:  jsr     LC8D1
-        jsr     LC9BF
-        cmp     #$4F
+LDDA7:  jsr     GetKey
+        jsr     min_MAJ
+        cmp     #"O"
         beq     LDDBA
-        cmp     #$4E
+        cmp     #"N"
         bne     LDDA7
         BRK_TELEMON XWR0
         jmp     LCFC8
@@ -4015,7 +4025,7 @@ LDDC7:  jsr     LD7EE
         beq     LDE4A
         jsr     LD7FA
         bmi     LDDD8
-        cmp     #$27
+        cmp     #"'"
         beq     LDDC7
         jsr     LD832
 LDDD8:  sta     INDIC2
@@ -4100,7 +4110,7 @@ LDE69:  lda     TXTPTR
         sta     VARAPL+11
         jsr     LD7FA
         bmi     LDE83
-        cmp     #$27
+        cmp     #"'"
         bne     LDE80
 LDE7A:  jsr     LDB05
         jmp     LDEDD
@@ -4249,14 +4259,14 @@ LDF95:  bcc     LDFC3
         bit     VARAPL+6
         bpl     LE002
         lda     VARAPL+7
-        cmp     #$2E
+        cmp     #"."
         bne     LDFA7
         lda     #$5B
         sta     VARAPL+7
         bne     LDFB7
 LDFA7:  inc     VARAPL+7
         lda     VARAPL+7
-        cmp     #$5B
+        cmp     #"Z"+1
         beq     LE002
         cmp     #$7B
         bne     LDFB7
@@ -4356,7 +4366,7 @@ SYDEF:  ldx     #$00
         jsr     LE090
         beq     LE074
         jsr     LD1AC
-        cmp     #$43
+        cmp     #"C"
         bne     LE08A
         ror     VARAPL+7
         jsr     CharGet
@@ -4462,7 +4472,7 @@ LE12A:  iny
         jsr     LC91A
         bcs     LE12A
 LE136:  lda     (DECDEB),y
-        cmp     #$20
+        cmp     #" "
         bne     LE14E
         iny
         cpy     #$06
@@ -4506,19 +4516,19 @@ LE179:  jsr     CharGet
         tax
         beq     LE1A6
         jsr     LD1AC
-        cmp     #$4C
+        cmp     #"L"
         bne     LE18E
         lda     VARAPL+11
         ora     #$80
         sta     VARAPL+11
         bne     LE179
-LE18E:  cmp     #$47
+LE18E:  cmp     #"G"
         bne     LE19A
         lda     VARAPL+11
         ora     #$40
         sta     VARAPL+11
         bne     LE179
-LE19A:  cmp     #$4D
+LE19A:  cmp     #"M"
         bne     LE15C
         lda     VARAPL+11
         ora     #$01
@@ -4557,7 +4567,7 @@ QBIN:   jsr     LE22D
         pha
         lda     #$7F
         BRK_TELEMON XWR0
-        lda     #$25
+        lda     #"%"
         BRK_TELEMON XWR0
         pla
         plp
@@ -4575,7 +4585,7 @@ QHEX:   jsr     LE22D
         pha
         lda     #$7F
         BRK_TELEMON XWR0
-        lda     #$24
+        lda     #"$"
         BRK_TELEMON XWR0
         pla
         plp
@@ -4601,14 +4611,14 @@ QCAR:   jsr     LE22D
 ; ----------------------------------------------------------------------------
 LE22D:  ldx     #$00
         stx     VARAPL+7
-        cmp     #$28
+        cmp     #"("
         bne     LE23A
         ror     VARAPL+7
         jsr     CharGet
-LE23A:  jsr     LCEDF
+LE23A:  jsr     EvalExpr
         bit     VARAPL+7
         bpl     LE250
-        cmp     #$29
+        cmp     #")"
         bne     LE260
         ldy     #$00
         lda     (VARAPL+14),y
@@ -4638,13 +4648,13 @@ LE266:  BRK_TELEMON XCRLF
 
 ; ----------------------------------------------------------------------------
 LE26E:  jsr     LD1AC
-        cmp     #$41
+        cmp     #"A"
         beq     LE283
-        cmp     #$59
+        cmp     #"Y"
         beq     LE286
-        cmp     #$58
+        cmp     #"X"
         beq     LE289
-        cmp     #$50
+        cmp     #"P"
         beq     LE28C
         clc
         rts
@@ -4658,7 +4668,7 @@ LE289:  ldy     #$02
         .byte   $2C
 LE28C:  ldy     #$01
         jsr     CharGet
-        jsr     LCEDF
+        jsr     EvalExpr
         lda     VARAPL+15
         bne     LE263
         lda     VARAPL+14
@@ -4755,7 +4765,7 @@ BYTE:   ldx     DEFBNK
         sty     Proc1+10
         txa
         beq     LE2E0
-LE349:  cmp     #$2C
+LE349:  cmp     #","
         bne     LE37F
         jsr     LD267
         jsr     LCCDB
@@ -4774,7 +4784,7 @@ SLIGNE: tax
         dex
         stx     XLPRBI
         jsr     LCF8D
-LE36E:  jsr     LC8D1
+LE36E:  jsr     GetKey
         cmp     #$0D
         beq     LE378
         jmp     LCFCB
@@ -4821,14 +4831,14 @@ FPAGE:  ldx     LPRFY
         jmp     LCFC8
 
 ; ----------------------------------------------------------------------------
-LE3CB:  cmp     #$2C
+LE3CB:  cmp     #","
         beq     LE3DD
         jsr     LD26A
         bne     LE402
         sta     INDIC2
         txa
         beq     LE3E7
-        cmp     #$2C
+        cmp     #","
         bne     LE3FF
 LE3DD:  jsr     LD267
         bne     LE402
@@ -4872,11 +4882,11 @@ MOVE:   ldx     DEFBNK
         sty     DECFIN+1
         txa
         jsr     LD1AC
-        cmp     #$42
+        cmp     #"B"
         bne     LE43A
         jsr     LD346
         stx     Proc2
-        cmp     #$2C
+        cmp     #","
         bne     LE3FF
         jsr     CharGet
 LE43A:  jsr     LD26A
@@ -5188,7 +5198,7 @@ LE666:  tay
         rts
 
 ; ----------------------------------------------------------------------------
-LE66F:  lda     #$09
+LE66F:  lda     #HT
 LE671:  BRK_TELEMON XWR0
         bit     HRSX6
         bpl     LE683
@@ -5201,7 +5211,7 @@ LE682:  rts
 ; ----------------------------------------------------------------------------
 LE683:  bvc     LE68F
         jsr     LCC53
-        lda     #$09
+        lda     #HT
         BRK_TELEMON XWR0
         lda     #$00
         .byte   $2C
@@ -5272,7 +5282,7 @@ LE711:  pla
         jmp     LC879
 
 ; ----------------------------------------------------------------------------
-LE719:  lda     #$08
+LE719:  lda     #BS
         BRK_TELEMON XWR0
         bit     HRSX6
         bpl     LE72C
@@ -5285,7 +5295,7 @@ LE72B:  rts
 ; ----------------------------------------------------------------------------
 LE72C:  bvs     LE738
         jsr     LCC45
-        lda     #$08
+        lda     #BS
         BRK_TELEMON XWR0
         lda     #$40
         .byte   $2C
@@ -5332,7 +5342,7 @@ LE782:  sec
         bcs     LE790
         dec     Proc1+2
 LE790:  jsr     LE613
-        lda     #$0B
+        lda     #VT
         BRK_TELEMON XWR0
         jsr     LE610
         plp
@@ -5387,7 +5397,7 @@ MODIF:  ldx     DEFBNK
         stx     $04E1
         tax
         bne     LE7E5
-LE803:  lda     #$0C
+LE803:  lda     #FF
         BRK_TELEMON XWR0
 LE807:  lda     #$00
         sta     HRSX6
@@ -5399,8 +5409,8 @@ LE807:  lda     #$00
         lda     $04F3
 LE81C:  jsr     LE5C0
 LE81F:  jsr     LE56F
-LE822:  jsr     LC8D1
-        cmp     #$20
+LE822:  jsr     GetKey
+        cmp     #" "
         bcs     LE82C
         jmp     LE8B0
 
@@ -5425,7 +5435,7 @@ LE82C:  bit     HRSX6
         ora     VARAPL+1
         jsr     DispByte
         stx     FLGSCR
-        lda     #$08
+        lda     #BS
         BRK_TELEMON XWR0
         pla
         jsr     LE637
@@ -5455,16 +5465,16 @@ LE87D:  and     #$0F
         jsr     LE637
         jsr     LC716
         pha
-        lda     #$08
+        lda     #BS
         BRK_TELEMON XWR0
         pla
         jsr     LE637
         jsr     DispByte
-        lda     #$08
+        lda     #BS
         BRK_TELEMON XWR0
         bit     HRSX6
         bvs     LE8A5
-        lda     #$08
+        lda     #BS
         BRK_TELEMON XWR0
 LE8A5:  jsr     LE66F
         jmp     LE81F
@@ -5577,14 +5587,14 @@ LE95A:  cmp     #$02
         ldy     #$17
         lda     #$00
         jsr     LC879
-LE965:  jsr     LC8D1
+LE965:  jsr     GetKey
         cmp     #$1B
         beq     LE991
         cmp     #$30
         bcc     LE965
         pha
         BRK_TELEMON XWR0
-        lda     #$08
+        lda     #BS
         BRK_TELEMON XWR0
         pla
         sec
@@ -5617,18 +5627,18 @@ LE9AA:  lda     #<Pile_str
         ldy     #>Pile_str
         ldx     #$21
         jsr     LC857
-        lda     #$0C
+        lda     #FF
         BRK_TELEMON XWR0
-        lda     #<Chan0InitTbl
-        ldy     #>Chan0InitTbl
+        lda     #<Scr0InitTbl
+        ldy     #>Scr0InitTbl
         ldx     #$00
         BRK_TELEMON XSCRSE
-        lda     #<Chan1InitTbl
-        ldy     #>Chan1InitTbl
+        lda     #<Scr1InitTbl
+        ldy     #>Scr1InitTbl
         ldx     #$01
         BRK_TELEMON XSCRSE
-        lda     #<Chan2InitTbl
-        ldy     #>Chan2InitTbl
+        lda     #<Scr2InitTbl
+        ldy     #>Scr2InitTbl
         ldx     #$02
         BRK_TELEMON XSCRSE
         lda     #XSCR
@@ -5647,7 +5657,7 @@ LE9AA:  lda     #<Pile_str
 
 ; ----------------------------------------------------------------------------
 ; Table d'initialisation écran 0
-Chan0InitTbl:
+Scr0InitTbl:
         .byte   $00
         .byte   $1D
         .byte   $01
@@ -5655,7 +5665,7 @@ Chan0InitTbl:
         .byte   $80
         .byte   $BB
 ; Table d'initialisation écran 1
-Chan1InitTbl:
+Scr1InitTbl:
         .byte   $07
         .byte   $1D
         .byte   $19
@@ -5663,7 +5673,7 @@ Chan1InitTbl:
         .byte   $80
         .byte   $BB
 ; Table d'initialisation écran 2
-Chan2InitTbl:
+Scr2InitTbl:
         .byte   $1F
         .byte   $27
         .byte   $01
@@ -5671,7 +5681,7 @@ Chan2InitTbl:
         .byte   $80
         .byte   $BB
 ; Table d'initialisation écran 0 bis
-Chan0bInitTbl:
+Scr0bInitTbl:
         .byte   $00
         .byte   $27
         .byte   $01
@@ -5719,7 +5729,7 @@ LEA3B:  tax
         beq     LEA7C
         jsr     LE26E
         bcs     LEA3B
-        cmp     #$53
+        cmp     #"S"
         bne     LEA53
         jsr     LD267
         sta     Ptr2
@@ -5727,19 +5737,19 @@ LEA3B:  tax
         jmp     LEA3A
 
 ; ----------------------------------------------------------------------------
-LEA53:  cmp     #$45
+LEA53:  cmp     #"E"
         bne     LEA60
         ror     Flags
 LEA5A:  jsr     CharGet
         jmp     LEA3B
 
 ; ----------------------------------------------------------------------------
-LEA60:  cmp     #$48
+LEA60:  cmp     #"H"
         bne     LEA6B
         lda     #$00
         sta     Flags
         beq     LEA5A
-LEA6B:  cmp     #$4E
+LEA6B:  cmp     #"N"
         bne     LEA73
         ror     XLPRBI
         bmi     LEA5A
@@ -5780,8 +5790,8 @@ LEABE:  jsr     LECF3
         lda     Flags
         bne     LEAE0
         cli
-LEAC7:  jsr     LC8D1
-        cmp     #$20
+LEAC7:  jsr     GetKey
+        cmp     #" "
         beq     LEAE0
         cmp     #$1B
         beq     LEB3A
@@ -5790,7 +5800,7 @@ LEAC7:  jsr     LC8D1
         cmp     #$0D
         bne     LEAC7
         lda     HRS3+1
-        cmp     #$20
+        cmp     #" "
         beq     LEAF6
 LEAE0:  lda     HRS3+1
         beq     LEAF6
@@ -5846,9 +5856,9 @@ LEB44:  jsr     LCF36
         cld
         lda     Flags
         beq     LEB51
-        jsr     LC8D1
-LEB51:  lda     #<Chan0bInitTbl
-        ldy     #>Chan0bInitTbl
+        jsr     GetKey
+LEB51:  lda     #<Scr0bInitTbl
+        ldy     #>Scr0bInitTbl
         ldx     #$00
         BRK_TELEMON XSCRSE
         jsr     LC8DC
@@ -5877,7 +5887,7 @@ LEB79:  pla
         pla
         sta     Ptr1+1
         lda     HRS3+1
-        cmp     #$4C
+        cmp     #"L"
         bne     LEB8E
         lda     HRS4
         ldy     HRS4+1
@@ -5898,7 +5908,7 @@ LEB8E:  cmp     #$6C
         jmp     LEBBB
 
 ; ----------------------------------------------------------------------------
-LEBA8:  cmp     #$20
+LEBA8:  cmp     #" "
         bne     LEBC4
         lda     Proc1+2
         pha
@@ -5957,7 +5967,7 @@ LEBF4:  cmp     #$68
         jmp     LEC26
 
 ; ----------------------------------------------------------------------------
-LEC07:  cmp     #$28
+LEC07:  cmp     #"("
         bne     LEC15
         cpx     #$FE
         bcs     LEBE5
@@ -5966,7 +5976,7 @@ LEC07:  cmp     #$28
         jmp     LEC26
 
 ; ----------------------------------------------------------------------------
-LEC15:  cmp     #$48
+LEC15:  cmp     #"H"
         bne     LEC1F
         lda     HRS3
         pha
@@ -6151,15 +6161,15 @@ LED40:  cmp     #$0D
         beq     LED3A
         jsr     LC934
         bcc     LED95
-        lda     #$90
+        lda     #<BUFEDT
         sta     TXTPTR
-        lda     #$05
+        lda     #>BUFEDT
         sta     TXTPTR+1
         jsr     CharGot
         ldy     #$00
         lda     (TXTPTR),y
         bmi     LED79
-        cmp     #$27
+        cmp     #"'"
         beq     LED2E
         jsr     LD86D
         jsr     LD8D4
@@ -6319,7 +6329,7 @@ SEEK:   ldx     #$00
         jsr     LEF14
         beq     LEEAC
         jsr     LD1AC
-        cmp     #$4C
+        cmp     #"L"
         bne     LEF17
         ror     XLPRBI
         jsr     CharGet
@@ -6383,13 +6393,13 @@ LEF11:  jmp     LCFC8
 
 ; ----------------------------------------------------------------------------
 LEF14:  tax
-        cmp     #$22
+        cmp     #'"'
 LEF17:  bne     SyntaxErr8
         ldx     #$00
         ldy     #$01
         lda     (TXTPTR),y
         beq     LEF25
-        cmp     #$22
+        cmp     #'"'
         bne     LEF2D
 LEF25:  jsr     IncTXTPTR
 ; Err $00
@@ -6401,7 +6411,7 @@ SyntaxErr8:
 LEF2D:  lda     (TXTPTR),y
         sta     BUFEDT,x
         beq     LEF42
-        cmp     #$22
+        cmp     #'"'
         beq     LEF3C
         iny
         inx
@@ -6417,16 +6427,16 @@ LEF42:  jsr     IncTXTPTR
 ; ----------------------------------------------------------------------------
 CHANGE: jsr     LEF14
         beq     SyntaxErr8
-        cmp     #$2C
+        cmp     #","
         bne     SyntaxErr8
         jsr     CharGet
-        cmp     #$22
+        cmp     #'"'
         bne     SyntaxErr8
         ldy     #$01
 LEF5C:  lda     (TXTPTR),y
         sta     $FF,y
         beq     LEF70
-        cmp     #$22
+        cmp     #'"'
         beq     LEF6A
         iny
         bne     LEF5C

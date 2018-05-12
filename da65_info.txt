@@ -107,7 +107,7 @@ LABEL { ADDR $04E0; NAME "DEFBNK"; SIZE 1; COMMENT "Banque par défaut"; };
 LABEL { NAME "Proc1"; ADDR $04E2; SIZE 12; COMMENT "Trouver un meilleur nom (cf $D101)"; };
 LABEL { NAME "Ptr1";  ADDR $04EE; SIZE 2 ; COMMENT "Trouver un meilleur nom"; };
 LABEL { NAME "Ptr2";  ADDR $04F0; SIZE 2 ; COMMENT "Trouver un meilleur nom"; };
-LABEL { ADDR $04f2; NAME "Flags"; COMMENT "b6: Trace";};
+LABEL { ADDR $04f2; NAME "Flags"; COMMENT "b6: Trace, aussi utilisé comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)";};
 ###LABEL { ADDR $04f3; NAME ""; COMMENT ""; };
 LABEL { ADDR $04f4; NAME "Proc2"; SIZE 6; COMMENT "Copie de LEA0F-LEA14 (Trouver un meilleur nom)"; };
 
@@ -152,10 +152,10 @@ LABEL { ADDR $c6c6; NAME "Fmt_str"; };
 LABEL { ADDR $c6cb; NAME "Saut_str"; };
 LABEL { ADDR $c6d1; NAME "Ligne_str"; };
 LABEL { ADDR $c6af; NAME "Pile_str"; };
-#LABEL { ADDR $e9e8; NAME "Chan0InitTbl"; };
-#LABEL { ADDR $e9ee; NAME "Chan1InitTbl"; };
-#LABEL { ADDR $e9f4; NAME "Chan2InitTbl"; };
-#LABEL { ADDR $e9fa; NAME "Chan0bInitTbl"; };
+#LABEL { ADDR $e9e8; NAME "Scr0InitTbl"; };
+#LABEL { ADDR $e9ee; NAME "Scr1InitTbl"; };
+#LABEL { ADDR $e9f4; NAME "Scr2InitTbl"; };
+#LABEL { ADDR $e9fa; NAME "Scr0bInitTbl"; };
 LABEL { ADDR $c69e; NAME "PasPas_str"; };
 LABEL { ADDR $c6a9; NAME "Exec_str"; };
 LABEL { ADDR $c697; NAME "Trace_str"; };
@@ -191,8 +191,14 @@ LABEL { ADDR $c7fe; NAME "PutBitStr";  COMMENT "Put bit string representation of
 LABEL { ADDR $c81b; NAME "DispErrorX"; COMMENT "Display error number X"; };
 LABEL { ADDR $c8f5; NAME "DispBank";   COMMENT "Display 'Banque ' + bank number ACC"; };
 
+LABEL { ADDR $c8d1; NAME "GetKey"; COMMENT "Attend un caractère au clavier"; };
+
+LABEL { ADDR $c9bf; NAME "min_MAJ"; COMMENT "Converti un caractère alpha minuscule en MAJUSCULE"; };
+
 LABEL { ADDR $ca3a; NAME "PutMnemo";  COMMENT "Put mnemonic number ACC at bottom of the stack"; };
 LABEL { ADDR $ca64; NAME "DecodeOpc"; COMMENT "Decode opcode in ACC"; };
+
+LABEL { ADDR $cd2c; NAME "EvalBinWord"; COMMENT "Saisie d'un nombre en binaire (%011011), maxi 2 octets"; };
 
 LABEL { ADDR $cde5; NAME "LocSymLookup";  COMMENT "Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
 LABEL { ADDR $ce4b; NAME "GlobSymLookup"; COMMENT "Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
@@ -202,11 +208,15 @@ LABEL { ADDR $ce77; NAME "SymLookup";     COMMENT "Find symbol in global, local,
 LABEL { ADDR $CE85; NAME "IncTXTPTR"; COMMENT "Add Y to TXTPTR"; };
 LABEL { ADDR $ce90; NAME "LCE90"; };
 
+LABEL { ADDR $cedf; NAME "EvalExpr"; COMMENT "Evalue une expression"; };
+LABEL { ADDR $cf06; NAME "EvalSomme"; COMMENT "Evalue une somme"; };
+LABEL { ADDR $cf1e; NAME "EvalDifference"; COMMENT "Evalue une différence"; };
+
 #
 # ATTENTION Labels en double
 #
 LABEL { ADDR $cefe; NAME "SyntaxErr";         COMMENT "Err $00"; };
-LABEL { ADDR $cf03; NAME "OutOfRangeValErr";  COMMENT "Err $0C"; };
+LABEL { ADDR $cf01; NAME "OutOfRangeValErr";  COMMENT "Err $0C"; };
 LABEL { ADDR $d19e; NAME "DriveErr";          COMMENT "Err $0A"; };
 LABEL { ADDR $d1a1; NAME "SyntaxErr1";         COMMENT "Err $00"; };
 LABEL { ADDR $d1a4; NAME "FileNameErr";       COMMENT "Err $09"; };
@@ -302,11 +312,11 @@ LABEL { ADDR $D63D; NAME "DELETE"; };
 LABEL { ADDR $D73A; NAME "DEL"; };
 LABEL { ADDR $E50A; NAME "MERGE"; };
 
-LABEL { ADDR $E9E8; NAME "Chan0InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 0"; };
-LABEL { ADDR $E9EE; NAME "Chan1InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 1"; };
-LABEL { ADDR $E9F4; NAME "Chan2InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 2"; };
-LABEL { ADDR $E9FA; NAME "Chan0bInitTbl"; SIZE 6; COMMENT "Table d'initialisation écran 0 bis"; };
-LABEL { ADDR $EA00; NAME "Table1";        SIZE 3; COMMENT "Trouver un meilleur nom"; };
+LABEL { ADDR $E9E8; NAME "Scr0InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 0"; };
+LABEL { ADDR $E9EE; NAME "Scr1InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 1"; };
+LABEL { ADDR $E9F4; NAME "Scr2InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 2"; };
+LABEL { ADDR $E9FA; NAME "Scr0bInitTbl"; SIZE 6; COMMENT "Table d'initialisation écran 0 bis"; };
+LABEL { ADDR $EA00; NAME "Table1";       SIZE 3; COMMENT "Trouver un meilleur nom"; };
 
 LABEL { ADDR $EE94; NAME "SEEK"; };
 LABEL { ADDR $EF4A; NAME "CHANGE"; };
