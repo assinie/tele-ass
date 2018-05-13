@@ -1,5 +1,5 @@
 ; da65 V2.17 - Git 334e30c
-; Created:    2018-05-12 19:45:20
+; Created:    2018-05-13 16:49:29
 ; Input file: original/teleass.rom
 ; Page:       1
 
@@ -57,8 +57,10 @@ FLGKBD          = $0275
 KBDSHT          = $0278
 LPRX            = $0286
 LPRY            = $0287
-LPRFY           = $0289                        ; Nombre de lignes par page pour l'imprimante
-LPRSY           = $028B                        ; N° de ligne pour le saur de page
+LPRFY           = $0289                        ; Nombre de lignes par page pour
+; l'imprimante
+LPRSY           = $028B                        ; N° de ligne pour le saut de
+; page
 VNMI            = $02F4
 VAPLIC          = $02FD
 V1DRB           = $0300
@@ -78,11 +80,14 @@ EXBNK           = $040C
 VEXBNK          = $0414
 BNKCIB          = $0417
 DEFBNK          = $04E0                        ; Banque par défaut
-Proc1           = $04E2                        ; Trouver un meilleur nom (cf $D101)
+Proc1           = $04E2                        ; Trouver un meilleur nom
+; (cf $D101)
 Ptr1            = $04EE                        ; Trouver un meilleur nom
 Ptr2            = $04F0                        ; Trouver un meilleur nom
-Flags           = $04F2                        ; b6: Trace, aussi utilisé comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)
-Proc2           = $04F4                        ; Copie de LEA0F-LEA14 (Trouver un meilleur nom)
+Flags           = $04F2                        ; b6: Trace, aussi utilisé
+; comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)
+Proc2           = $04F4                        ; Copie de LEA0F-LEA14 (Trouver
+; un meilleur nom)
 DRIVE           = $0500
 ERRNB           = $0512
 SAVES           = $0513
@@ -854,9 +859,9 @@ DispErrorX:
         pha                                     ; C81B 48
         tya                                     ; C81C 98
         pha                                     ; C81D 48
-        lda     #$33                            ; C81E A9 33
+        lda     #<ErrMsgs                       ; C81E A9 33
         sta     TR0                             ; C820 85 0C
-        lda     #$C4                            ; C822 A9 C4
+        lda     #>ErrMsgs                       ; C822 A9 C4
         sta     TR1                             ; C824 85 0D
         bne     LC83A                           ; C826 D0 12
 LC828:  iny                                     ; C828 C8
@@ -1738,7 +1743,8 @@ LCDDE:  pla                                     ; CDDE 68
         rts                                     ; CDE4 60
 
 ; ----------------------------------------------------------------------------
-; Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if found
+; Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if
+; found
 LocSymLookup:
         ldx     #$00                            ; CDE5 A2 00
         stx     VARAPL+5                        ; CDE7 86 D5
@@ -1795,7 +1801,8 @@ LCE46:  ldy     #$00                            ; CE46 A0 00
         rts                                     ; CE4A 60
 
 ; ----------------------------------------------------------------------------
-; Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3 if found
+; Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3
+; if found
 GlobSymLookup:
         ldx     #$00                            ; CE4B A2 00
         stx     VARAPL+5                        ; CE4D 86 D5
@@ -1808,7 +1815,8 @@ GlobSymLookup:
         lda     VARAPL2+10                      ; CE5B A5 F5
         sta     VARAPL+13                       ; CE5D 85 DD
         bne     LCE2A                           ; CE5F D0 C9
-; Find symbol in monitor symbol table, return C=1 + symbol address in VARAPL+3 if found
+; Find symbol in monitor symbol table, return C=1 + symbol address in VARAPL+3
+; if found
 MonSymLookup:
         ldx     #$80                            ; CE61 A2 80
         stx     VARAPL+5                        ; CE63 86 D5
@@ -1821,7 +1829,8 @@ MonSymLookup:
         lda     #>SymbolTable                   ; CE71 A9 F0
         sta     VARAPL+13                       ; CE73 85 DD
         bne     LCE2A                           ; CE75 D0 B3
-; Find symbol in global, local, monitor symbol table, return C=1 + symbol address in VARAPL+3 if found
+; Find symbol in global, local, monitor symbol table, return C=1 + symbol
+; address in VARAPL+3 if found
 SymLookup:
         jsr     GlobSymLookup                   ; CE77 20 4B CE
         bcs     LCE84                           ; CE7A B0 08
@@ -2245,7 +2254,8 @@ LD10D:  cmp     #$00                            ; D10D C9 00
 LD11F:  rts                                     ; D11F 60
 
 ; ----------------------------------------------------------------------------
-; Efface le programme et initialise les pointeurs de la table des symboles locaux
+; Efface le programme et initialise les pointeurs de la table des symboles
+; locaux
 Clear:  ldy     #$00                            ; D120 A0 00
         tya                                     ; D122 98
         sta     (SCEDEB),y                      ; D123 91 5C
@@ -2361,7 +2371,9 @@ LD1BA:  jsr     LD182                           ; D1BA 20 82 D1
         jmp     LCFCB                           ; D1C5 4C CB CF
 
 ; ----------------------------------------------------------------------------
-; LOAD ''NF'' (,A EN) (,V) (,N) : chargement d'un fichier (A EN->force l'adresse de chargement, V->affiche les adresses de début et fin, N->force le chargement sans exécution)
+; LOAD ''NF'' (,A EN) (,V) (,N) : chargement d'un fichier (A EN->force
+; l'adresse de chargement, V->affiche les adresses de début et fin, N->force le
+; chargement sans exécution)
 LOAD:   jsr     LD182                           ; D1C8 20 82 D1
         bne     FileNameErr                     ; D1CB D0 D7
 LD1CD:  jsr     CharGot                         ; D1CD 20 E8 00
@@ -2497,7 +2509,9 @@ LD2B3:  php                                     ; D2B3 08
         rts                                     ; D2B8 60
 
 ; ----------------------------------------------------------------------------
-; (L)DESAS adrdeb (,adrfin) (B val) : désassemble le programme à partir de l'adress adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin si précisée
+; (L)DESAS adrdeb (,adrfin) (B val) : désassemble le programme à partir de
+; l'adresse adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin si
+; précisée
 DESAS:  ldy     #$00                            ; D2B9 A0 00
         .byte   $2C                             ; D2BB 2C
 LDESAS: ldy     #$80                            ; D2BC A0 80
@@ -2508,7 +2522,9 @@ LD2C3:  jsr     LD3CB                           ; D2C3 20 CB D3
         jsr     LD2A8                           ; D2C9 20 A8 D2
         bcc     LD2C3                           ; D2CC 90 F5
         bcs     LD2E2                           ; D2CE B0 12
-; (L)DUMP adrdeb (,adrfin) (,B val) : affiche un dump de la mémoire depuis l'adress adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin si précisée
+; (L)DUMP adrdeb (,adrfin) (,B val) : affiche un dump de la mémoire depuis
+; l'adress adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin  si
+; précisée
 DUMP:   ldy     #$00                            ; D2D0 A0 00
         .byte   $2C                             ; D2D2 2C
 LDUMP:  ldy     #$80                            ; D2D3 A0 80
@@ -2860,7 +2876,8 @@ LD546:  sec                                     ; D546 38
 LD548:  jmp     LCF98                           ; D548 4C 98 CF
 
 ; ----------------------------------------------------------------------------
-; (L)LIST (numdeb) (-) (numfin) : liste le source du fichier en mémoire. numdeb et numfin sont soit des n° de ligne en décimal, soit des étiquettes
+; (L)LIST (numdeb) (-) (numfin) : liste le source du fichier en mémoire. numdeb
+; et numfin sont soit des n° de ligne en décimal, soit des étiquettes
 LIST:   BRK_TELEMON XCRLF                             ; D54B 00 25
         lda     #$00                            ; D54D A9 00
         .byte   $2C                             ; D54F 2C
@@ -2893,7 +2910,9 @@ LD577:  tay                                     ; D577 A8
 LD586:  jmp     LCFCB                           ; D586 4C CB CF
 
 ; ----------------------------------------------------------------------------
-; RENUM (num1) (,pas) (,numdeb) (,numfin) : renumérotation des lignes de numdeb à numfin avec 'num1' nouvelle 1ère ligne et 'pas' l'incrément. numdeb et numfin peuvent être des n° de lignes en décimal ou des étiquettes
+; RENUM (num1) (,pas) (,numdeb) (,numfin) : renumérotation des lignes de numdeb
+; à numfin avec 'num1' nouvelle 1ère ligne et 'pas' l'incrément. numdeb et
+; numfin peuvent être des n° de lignes en décimal ou des étiquettes
 RENUM:  pha                                     ; D589 48
         ldx     #$FF                            ; D58A A2 FF
         stx     DECTRV                          ; D58C 86 0A
@@ -2993,7 +3012,8 @@ LD618:  bcc     LD63A                           ; D618 90 20
 LD63A:  jmp     LCFCB                           ; D63A 4C CB CF
 
 ; ----------------------------------------------------------------------------
-; DELETE (numdeb) (-) (numfin) : supprime les lignes numdeb à numfin. numdeb et numfin peuvent être des n° de ligne en décimal ou des étiquettes
+; DELETE (numdeb) (-) (numfin) : supprime les lignes numdeb à numfin. numdeb et
+;  numfin peuvent être des n° de ligne en décimal ou des étiquettes
 DELETE: tax                                     ; D63D AA
         bne     LD643                           ; D63E D0 03
         jmp     NEW                             ; D640 4C 35 D1
@@ -3158,6 +3178,7 @@ DELBAK: tax                                     ; D758 AA
 
 ; ----------------------------------------------------------------------------
 ; EXT (''ext'') : affiche ou modifie l'extension par défaut (3 caractères maxi)
+;
 EXT:    tax                                     ; D765 AA
         bne     GetEXTparam                     ; D766 D0 13
         lda     #$7F                            ; D768 A9 7F
@@ -3828,7 +3849,10 @@ LDC01:  jmp     IllegalValErr2                  ; DC01 4C 40 D8
 LDC04:  jmp     SyntaxErr5                      ; DC04 4C 3D D8
 
 ; ----------------------------------------------------------------------------
-; (L)ASSEM (adrdeb) (,G) (,L) (,S) : assemble le programme en mémoire. adrdeb indique l'adresse physique à laquelle le programme est assemblé en mémoire. L'adresse d'origine du programme assemblé doit être indiquée par une directive ORG dans le sourc
+; (L)ASSEM (adrdeb) (,G) (,L) (,S) : assemble le programme en mémoire. adrdeb
+; indique l'adresse physique à laquelle le programme est assemblé en mémoire.
+; L'adresse d'origine du programme assemblé doit être indiquée par une directive
+; ORG dans le
 ASSEM:  ldx     #$00                            ; DC07 A2 00
         .byte   $2C                             ; DC09 2C
 LASSEM: ldx     #$80                            ; DC0A A2 80
@@ -4365,7 +4389,9 @@ LE013:  lda     #<Symboles_str                  ; E013 A9 5D
         rts                                     ; E036 60
 
 ; ----------------------------------------------------------------------------
-; SYOLD (adrdeb, adrlim) : retrouve les symboles globaux (après sauvegarde et rechargement par exemple) et réinitialise les adresses de début et limite de la table (valeurs par défaut sinon: $3000, $3FFF)
+; SYOLD (adrdeb, adrlim) : retrouve les symboles globaux (après sauvegarde et
+; rechargement par exemple) et réinitialise les adresses de début et limite de
+; la table (valeurs par défaut sinon: $3000, $3FFF)
 SYOLD:  ldx     VARAPL2+9                       ; E037 A6 F4
         ldy     VARAPL2+10                      ; E039 A4 F5
         stx     Ptr1                            ; E03B 8E EE 04
@@ -4382,7 +4408,10 @@ LE053:  jsr     LE0AB                           ; E053 20 AB E0
         jmp     LE07D                           ; E056 4C 7D E0
 
 ; ----------------------------------------------------------------------------
-; SYDEF (adrdeb, adrlim (,C)) : sans option, donne les adresses de la table des symboles Globaux, sinon déplace cette table en adrdeb et fixe sa limite à ardlim. L'option C permet de recopier à partir de adrdeb les symboles globaux existants, sinon la ta
+; SYDEF (adrdeb, adrlim (,C)) : sans option, donne les adresses de la table des
+; symboles Globaux, sinon déplace cette table en adrdeb et fixe sa limite à
+; ardlim. L'option C permet de recopier à partir de adrdeb les symboles globaux
+; existants, sinon
 SYDEF:  ldx     #$00                            ; E059 A2 00
         stx     VARAPL+7                        ; E05B 86 D7
         tax                                     ; E05D AA
@@ -4522,7 +4551,9 @@ LE14E:  ldy     #$00                            ; E14E A0 00
 LE15C:  jmp     SyntaxErr5                      ; E15C 4C 3D D8
 
 ; ----------------------------------------------------------------------------
-; (L)SYTAB (,L) (,G) (,M) : liste la table des symboles (L)ocaux, (G)lobaux ou (M)oniteur par ordre alphabétique. Par défaut seule la table (G)lobale est affichée
+; (L)SYTAB (,L) (,G) (,M) : liste la table des symboles (L)ocaux, (G)lobaux ou
+; (M)oniteur par ordre alphabétique. Par défaut seule la table (G)lobale est
+; affichée
 SYTAB:  ldy     #$00                            ; E15F A0 00
         .byte   $2C                             ; E161 2C
 LSYTAB: ldy     #$80                            ; E162 A0 80
@@ -4608,6 +4639,7 @@ LE1F9:  jmp     LCFC8                           ; E1F9 4C C8 CF
 
 ; ----------------------------------------------------------------------------
 ; ?HEX val | ?HEX (adr) : conversion de val ou du contenu de adr en hexadécimal
+;
 QHEX:   jsr     LE22D                           ; E1FC 20 2D E2
         php                                     ; E1FF 08
         pha                                     ; E200 48
@@ -4626,7 +4658,8 @@ LE213:  jsr     DispByte                        ; E213 20 92 C7
         jmp     LE1F9                           ; E216 4C F9 E1
 
 ; ----------------------------------------------------------------------------
-; ?CAR val | ?CAR (adr) : conversion de val ou du contenu de adr en caractère ASCII
+; ?CAR val | ?CAR (adr) : conversion de val ou du contenu de adr en caractère
+; ASCII
 QCAR:   jsr     LE22D                           ; E219 20 2D E2
         bne     LE263                           ; E21C D0 45
         pha                                     ; E21E 48
@@ -4661,7 +4694,8 @@ LE250:  tax                                     ; E250 AA
         rts                                     ; E257 60
 
 ; ----------------------------------------------------------------------------
-; VREG (,A val) (,Y val) (,X val) (,P val) : affiche ou modifie le contenu des registres du 6502
+; VREG (,A val) (,Y val) (,X val) (,P val) : affiche ou modifie le contenu des
+; registres du 6502
 VREG:   tax                                     ; E258 AA
         beq     LE266                           ; E259 F0 0B
         jsr     EvalSetReg                      ; E25B 20 6E E2
@@ -4749,7 +4783,10 @@ LE2BE:  iny                                     ; E2BE C8
 LE2E0:  jmp     SyntaxErr5                      ; E2E0 4C 3D D8
 
 ; ----------------------------------------------------------------------------
-; CALL adrdeb (B val) (,A val) (,Y val) (,X val) (P val) : exécute la routine adrdeb de la banque indiquée, ou de celle par défaut, en pré-chargeant éventuellement les registres du 6502. Les registres peuvent aussi être pré-chargés par la commande V
+; CALL adrdeb (B val) (,A val) (,Y val) (,X val) (P val) : exécute la routine
+; adrdeb de la banque indiquée, ou de celle par défaut, en pré-chargeant
+; éventuellement les registres du 6502. Les registres peuvent aussi être
+; pré-chargés
 CALL:   tax                                     ; E2E3 AA
         beq     LE2E0                           ; E2E4 F0 FA
         ldx     DEFBNK                          ; E2E6 AE E0 04
@@ -4790,7 +4827,9 @@ LE307:  BRK_TELEMON XCRLF                             ; E307 00 25
         jmp     LCFCB                           ; E331 4C CB CF
 
 ; ----------------------------------------------------------------------------
-; BYTES adrdeb ,val1 (,val2...) : place les valeurs val1,... en mémoire à partir de l'adresse adrdeb. Les valeurs sur 2 octets sont stockées en mode LSB,MSB (COMMANDE NON DOCUMENTEE)
+; BYTES adrdeb ,val1 (,val2...) : place les valeurs val1,... en mémoire à
+; partir de l'adresse adrdeb. Les valeurs sur 2 octets sont stockées en mode LSB
+;,MSB (COMMANDE NON DOCUMENTEE)
 BYTES:  ldx     DEFBNK                          ; E334 AE E0 04
         stx     $04E1                           ; E337 8E E1 04
         tax                                     ; E33A AA
@@ -4814,7 +4853,8 @@ LE35F:  txa                                     ; E35F 8A
         jmp     LCFCB                           ; E362 4C CB CF
 
 ; ----------------------------------------------------------------------------
-; SLIGNE : effectue un saut de ligne à chaque appui sur <RETURN>, autre touche arrête le processus
+; SLIGNE : effectue un saut de ligne à chaque appui sur <RETURN>, autre touche
+; arrête le processus
 SLIGNE: tax                                     ; E365 AA
         bne     LE37F                           ; E366 D0 17
         dex                                     ; E368 CA
@@ -4840,7 +4880,8 @@ LE37F:  bne     LE3FF                           ; E37F D0 7E
         jmp     LCFCB                           ; E38A 4C CB CF
 
 ; ----------------------------------------------------------------------------
-; FPAGE (LPRFY) (,LPRSY) : affiche ou initialise le nombre de lignes par page (LPRFY) et le n° de ligne pour le saut de page (LPRSY)
+; FPAGE (LPRFY) (,LPRSY) : affiche ou initialise le nombre de lignes par page
+; (LPRFY) et le n° de ligne pour le saut de page (LPRSY)
 FPAGE:  ldx     LPRFY                           ; E38D AE 89 02
         stx     INDIC2                          ; E390 86 57
         ldx     LPRSY                           ; E392 AE 8B 02
@@ -4907,7 +4948,9 @@ PrinterFormatErr:
         jmp     LCF98                           ; E407 4C 98 CF
 
 ; ----------------------------------------------------------------------------
-; MOVE adrdeb ,adrfin (, B val1) , adrcib (, B val2) : déplcae un bloc mémoire de adrdeb inclus à adrfin exclus vers adrcib. Si pas de banque précisée: banque par défaut
+; MOVE adrdeb ,adrfin (, B val1) , adrcib (, B val2) : déplace un bloc mémoire
+; de adrdeb inclus à adrfin exclus vers adrcib. Si pas de banque précisée:
+; banque par défaut
 MOVE:   ldx     DEFBNK                          ; E40A AE E0 04
         stx     Proc2                           ; E40D 8E F4 04
         stx     Proc2+1                         ; E410 8E F5 04
@@ -5051,7 +5094,8 @@ LE4EE:  php                                     ; E4EE 08
         rts                                     ; E509 60
 
 ; ----------------------------------------------------------------------------
-; MERGE ''NF'' : ajoute le fichier source ''NF'' à la suite du programme en mémoire et renumérote les lignes
+; MERGE ''NF'' : ajoute le fichier source ''NF'' à la suite du programme en
+; mémoire et renumérote les lignes
 MERGE:  jsr     LD182                           ; E50A 20 82 D1
         bne     FileNameErr2                    ; E50D D0 3D
         jsr     CharGot                         ; E50F 20 E8 00
@@ -5431,7 +5475,8 @@ LE7C2:  lda     Proc1+1                         ; E7C2 AD E3 04
 LE7E5:  jmp     SyntaxErr5                      ; E7E5 4C 3D D8
 
 ; ----------------------------------------------------------------------------
-; MODIF adrdeb (,B val) : modification pleine page de la mémoire à partir de l'adresse adrdeb de la banque indiquée ou celle par défaut
+; MODIF adrdeb (,B val) : modification pleine page de la mémoire à partir de
+; l'adresse adrdeb de la banque indiquée ou celle par défaut
 MODIF:  ldx     DEFBNK                          ; E7E8 AE E0 04
         stx     $04E1                           ; E7EB 8E E1 04
         jsr     LD26A                           ; E7EE 20 6A D2
@@ -5755,7 +5800,8 @@ LEA13:  sec                                     ; EA13 38
         rts                                     ; EA14 60
 
 ; ----------------------------------------------------------------------------
-; TRACE adrdeb (,S adrstop) (,E) (,H) (,N) (,A val) (...) (,B val) : exécute une routine en mode trace
+; TRACE adrdeb (,S adrstop) (,E) (,H) (,N) (,A val) (...) (,B val) : exécute
+; une routine en mode trace
 TRACE:  jsr     LEA03                           ; EA15 20 03 EA
         ldx     #$40                            ; EA18 A2 40
         stx     Flags                           ; EA1A 8E F2 04
@@ -6194,7 +6240,8 @@ LED08:  lda     #<Assemblage_str                ; ED08 A9 83
 LED11:  jmp     SyntaxErr5                      ; ED11 4C 3D D8
 
 ; ----------------------------------------------------------------------------
-; MINAS adrdeb : mini-assembleur ligne par ligne. Fin par saisie d'une ligne vide
+; MINAS adrdeb : mini-assembleur ligne par ligne. Fin par saisie d'une ligne
+; vide
 MINAS:  tax                                     ; ED14 AA
         beq     LED11                           ; ED15 F0 FA
         jsr     LD26A                           ; ED17 20 6A D2
@@ -6390,7 +6437,9 @@ LEE89:  pha                                     ; EE89 48
         jmp     LC766                           ; EE91 4C 66 C7
 
 ; ----------------------------------------------------------------------------
-; SEEK ''chaine'' (,L) : recherche la chiane entre double-quotes et indique le nombre d'occurences. Si l'option 'L' est précisée, affiche aussi les lignes correspondantes
+; SEEK ''chaine'' (,L) : recherche la chiane entre double-quotes et indique le
+; nombre d'occurences. Si l'option 'L' est précisée, affiche aussi les lignes
+; correspondantes
 SEEK:   ldx     #$00                            ; EE94 A2 00
         stx     XLPRBI                          ; EE96 86 48
         jsr     EvalString                      ; EE98 20 14 EF
@@ -6494,7 +6543,8 @@ LEF42:  jsr     IncTXTPTR                       ; EF42 20 85 CE
         rts                                     ; EF49 60
 
 ; ----------------------------------------------------------------------------
-; CHANGE ''chaine1'',''chaine2'' : remplace toutes les occurences de chaine1 par chaine2. Les chaines peuvent contenir des double-quotes
+; CHANGE ''chaine1'',''chaine2'' : remplace toutes les occurences de chaine1
+; par chaine2. Les chaines peuvent contenir des double-quotes
 CHANGE: jsr     EvalString                      ; EF4A 20 14 EF
         beq     SyntaxErr8                      ; EF4D F0 D9
         cmp     #","                            ; EF4F C9 2C
