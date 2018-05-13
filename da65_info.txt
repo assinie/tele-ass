@@ -102,12 +102,13 @@ LABEL { NAME "VEXBNK"; ADDR  $0414; SIZE 3;  };
 LABEL { NAME "BNKCIB"; ADDR  $0417; SIZE 1;  };
 
 LABEL { ADDR $04E0; NAME "DEFBNK"; SIZE 1;    COMMENT "Banque par défaut"; };
-###LABEL { ADDR $04E1; NAME "CURBNK"; SIZE 1; COMMENT "Banque par courante?"; };
+LABEL { ADDR $04E1; NAME "BNKSAV"; SIZE 1;    COMMENT "Sauvegarde de la banque courante?"; };
 
 LABEL { NAME "Proc1"; ADDR $04E2; SIZE 12;    COMMENT "Trouver un meilleur nom        (cf $D101)"; };
 LABEL { NAME "Ptr1";  ADDR $04EE; SIZE 2 ;    COMMENT "Trouver un meilleur nom"; };
 LABEL { NAME "Ptr2";  ADDR $04F0; SIZE 2 ;    COMMENT "Trouver un meilleur nom"; };
-LABEL { ADDR $04f2; NAME "Flags";             COMMENT "b6: Trace, aussi utilisé       comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)";};
+# LABEL { ADDR $04f2; NAME "Flags";             COMMENT "b6: Trace, aussi utilisé       comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)";};
+LABEL { ADDR $4f2; SIZE 2; NAME "Ptr3";       COMMENT "b6: Trace, aussi utilisé       comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)"; };
 ###LABEL { ADDR $04f3; NAME "";               COMMENT ""; };
 LABEL { ADDR $04f4; NAME "Proc2"; SIZE 6;     COMMENT "Copie de LEA0F-LEA14 (Trouver  un meilleur nom)"; };
 
@@ -165,16 +166,16 @@ LABEL { ADDR $c6be; NAME "MAJ_min_str"; };
 
 
 
-RANGE { START $c003; END $c0aa; TYPE TextTable; NAME "Mnemonics";     COMMENT "Mnemonics"; };
-RANGE { START $c0ab; END $c0c5; TYPE TextTable; NAME "PseudoOps";     COMMENT "Pseudo Operations"; };
+RANGE { START $c003; END $c0aa; TYPE TextTable; NAME "MnemonicsTable"; COMMENT "Mnemonics table"; };
+RANGE { START $c0ab; END $c0c5; TYPE TextTable; NAME "PseudoOps";      COMMENT "Pseudo Operations"; };
 
-RANGE { START $c0c6; END $c1c5; TYPE ByteTable; NAME "Oplen";         COMMENT "Oplen"; };
-RANGE { START $c1c6; END $c2c5; TYPE ByteTable; NAME "Opmode";        COMMENT "Opmode"; };
-RANGE { START $c2c6; END $c3c6; TYPE TextTable; NAME "CommandsTable"; COMMENT "Commands"; };
-RANGE { START $c3c7; END $c432; TYPE RTSTable;  NAME "CommandsAddr";  COMMENT "Commands Addresses"; };
+RANGE { START $c0c6; END $c1c5; TYPE ByteTable; NAME "Oplen";          COMMENT "Oplen"; };
+RANGE { START $c1c6; END $c2c5; TYPE ByteTable; NAME "Opmode";         COMMENT "Opmode"; };
+RANGE { START $c2c6; END $c3c6; TYPE TextTable; NAME "CommandsTable";  COMMENT "Commands"; };
+RANGE { START $c3c7; END $c432; TYPE RTSTable;  NAME "CommandsAddr";   COMMENT "Commands Addresses"; };
 
-RANGE { START $c433; END $c62a; TYPE TextTable; NAME "ErrMsgs";       COMMENT "Error Messages"; };
-RANGE { START $c62b; END $c715; TYPE TextTable;                       COMMENT "Status Messages"; };
+RANGE { START $c433; END $c62a; TYPE TextTable; NAME "ErrMsgs";        COMMENT "Error Messages"; };
+RANGE { START $c62b; END $c715; TYPE TextTable;                        COMMENT "Status Messages"; };
 
 LABEL { ADDR $c72c; NAME "DispYSpace";        COMMENT "Display Y spaces"; };
 LABEL { ADDR $c735; NAME "DispSpace";         COMMENT "Display a space"; };
@@ -195,8 +196,13 @@ LABEL { ADDR $c8d1; NAME "GetKey";            COMMENT "Attend un caractère au c
 
 LABEL { ADDR $c9bf; NAME "min_MAJ";           COMMENT "Converti un caractère alpha minuscule en MAJUSCULE"; };
 
+LABEL { ADDR $c9cd; NAME "MnemonicLookup";    COMMENT "Recherche une instruction dans la table des mnemoniques"; };
+LABEL { ADDR $c9da; NAME "TableLookup";       COMMENT "Recherche une chaine dans une table. Entrée avec X = offset dans le buffer    d'entrée"; };
+LABEL { ADDR $ca1d; NAME "CommandLookup";     COMMENT "Recherche une commande dans la table des commandes"; };
+
 LABEL { ADDR $ca3a; NAME "PutMnemo";          COMMENT "Put mnemonic number ACC at bottom of the stack"; };
 LABEL { ADDR $ca64; NAME "DecodeOpc";         COMMENT "Decode opcode in ACC"; };
+LABEL { ADDR $ca2d; NAME "SkipSpaces";        COMMENT "Saute les premiers espaces dans BUFEDT"; };
 
 LABEL { ADDR $cd2c; NAME "EvalBinWord";       COMMENT "Saisie d'un nombre en binaire (%011011), maxi 2 octets"; };
 
@@ -270,6 +276,7 @@ LABEL { ADDR $d1ac; NAME "EvalComma";         COMMENT "Evalue une ','"; };
 LABEL { ADDR $d1c8; NAME "LOAD";              COMMENT "LOAD ''NF'' (,A EN) (,V) (,N) : chargement d'un fichier (A EN->force          l'adresse de chargement, V->affiche les adresses de début et fin, N->force le  chargement sans exécution)"; };
 
 LABEL { ADDR $d25e; NAME "EXBNK0ERR";         COMMENT "Exécute une routine en banque 0 et affiche le code d'erreur"; };
+LABEL { ADDR $d26a; NAME "EvalWord";          COMMENT "Evalue un mot, résulat dans AY. Si Z=1 on a évalué un octet"; };
 LABEL { ADDR $d28a; NAME "EXBNK0";            COMMENT "Exécute une routine en banque 0 (adresse en AY)"; };
 
 LABEL { ADDR $D2B9; NAME "DESAS";             COMMENT "(L)DESAS adrdeb (,adrfin) (B val) : désassemble le programme à partir de      l'adresse adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin si précisée"; };
