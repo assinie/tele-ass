@@ -1,5 +1,5 @@
 ; da65 V2.17 - Git 334e30c
-; Created:    2018-05-13 21:49:27
+; Created:    2018-05-15 01:53:48
 ; Input file: original/teleass.rom
 ; Page:       1
 
@@ -29,13 +29,13 @@ HRSY            = $0047
 XLPRBI          = $0048                        ; Printer flag (b7)
 HRSX40          = $0049
 HRSX6           = $004A
-HRS1            = $004D
-HRS2            = $004F
-HRS3            = $0051
-HRS4            = $0053
+REGS            = $004D                        ; Sauvegarde des registres: S, P
+;, X, Y, ACC
+INSTR           = $0052                        ; Instruction en cours (TRACE ou
+; ASSEM)
 INDIC0          = $0055                        ; Also HRS5
 INDIC2          = $0057                        ; Also HRSFB
-SCEDEB          = $005C
+SCEDEB          = $005C                        ; Valeur par défaut: $0800
 SCEFIN          = $005E
 VARLNG          = $008C
 VARAPL          = $00D0
@@ -43,6 +43,11 @@ CharGet         = $00E2
 CharGot         = $00E8
 TXTPTR          = $00E9
 VARAPL2         = $00EB
+GlobalTblStart  = $00F4
+GlobalTblEnd    = $00F6
+GlobalTblLimit  = $00F8
+LocalTblStart   = $00FA
+LocalTblEnd     = $00FC
 BUFTRV          = $0100
 TABDRV          = $0208
 FLGTEL          = $020D
@@ -82,8 +87,12 @@ BNKCIB          = $0417
 DEFBNK          = $04E0                        ; Banque par défaut
 BNKSAV          = $04E1                        ; Sauvegarde de la banque couran
 ;te?
-Proc1           = $04E2                        ; Trouver un meilleur nom
-; (cf $D101)
+LoadByte        = $04E2                        ; Lit un octet   (routine copiée
+; depuis $D101)
+StoreByte       = $04E6                        ; Ecrit un octet (routine copiée
+; depuis $D105)
+StoreByte2      = $04EA                        ; Ecrit un octet (routine copiée
+; depuis $D109)
 Ptr1            = $04EE                        ; Trouver un meilleur nom
 Ptr2            = $04F0                        ; Trouver un meilleur nom
 Ptr3            = $04F2                        ; b6: Trace, aussi utilisé
@@ -97,10 +106,8 @@ BUFNOM          = $0517
 VSALO0          = $0528
 VSALO1          = $0529
 FTYPE           = $052C
-INPIS           = $052D                        ; Also DESALO
-INSEC           = $052E
-PARPIS          = $052F
-PARSEC          = $0530
+DESALO          = $052D
+FISALO          = $052F
 EXSALO          = $0531
 EXTDEF          = $055D
 BUFEDT          = $0590
@@ -243,7 +250,7 @@ PseudoOps:
         .byte   "??"                            ; C0C3 3F 3F
         .byte   $BF                             ; C0C5 BF
 ; ----------------------------------------------------------------------------
-; Oplen
+; Oplen: 0-> code invalide, xxxx xxnn: nn->nombre d'octets de l'instruction
 Oplen:  .byte   $01,$55,$00,$00,$00,$01,$01,$00 ; C0C6 01 55 00 00 00 01 01 00
         .byte   $00,$81,$00,$00,$00,$02,$02,$00 ; C0CE 00 81 00 00 00 02 02 00
         .byte   $C1,$69,$00,$00,$00,$11,$11,$00 ; C0D6 C1 69 00 00 00 11 11 00
@@ -276,7 +283,7 @@ Oplen:  .byte   $01,$55,$00,$00,$00,$01,$01,$00 ; C0C6 01 55 00 00 00 01 01 00
         .byte   $00,$81,$00,$00,$02,$02,$02,$00 ; C1AE 00 81 00 00 02 02 02 00
         .byte   $C1,$69,$00,$00,$00,$11,$11,$00 ; C1B6 C1 69 00 00 00 11 11 00
         .byte   $00,$0A,$00,$00,$00,$12,$12,$00 ; C1BE 00 0A 00 00 00 12 12 00
-; Opmode
+; Opmode: 0nnn nnnn -> N° du mnemonique, *3 -> offset dans la table Mnemonics
 Opmode: .byte   $80,$B1,$BF,$BF,$BF,$B1,$A3,$BF ; C1C6 80 B1 BF BF BF B1 A3 BF
         .byte   $8B,$B1,$A3,$BF,$BF,$B1,$A3,$BF ; C1CE 8B B1 A3 BF BF B1 A3 BF
         .byte   $9E,$B1,$BF,$BF,$BF,$B1,$A3,$BF ; C1D6 9E B1 BF BF BF B1 A3 BF
@@ -704,13 +711,13 @@ DispRegs:
         ldy     #$08                            ; C748 A0 08
         jsr     DispYSpace                      ; C74A 20 2C C7
         ldy     #$03                            ; C74D A0 03
-LC74F:  lda     HRS1+1,y                        ; C74F B9 4E 00
+LC74F:  lda     REGS+1,y                        ; C74F B9 4E 00
         jsr     DispByte                        ; C752 20 92 C7
         jsr     DispSpace                       ; C755 20 35 C7
         dey                                     ; C758 88
         bpl     LC74F                           ; C759 10 F4
         jsr     DispSpace                       ; C75B 20 35 C7
-        lda     HRS1+1                          ; C75E A5 4E
+        lda     REGS+1                          ; C75E A5 4E
         jsr     DispBitStr                      ; C760 20 A1 C7
 LC763:  BRK_TELEMON XCRLF                             ; C763 00 25
         rts                                     ; C765 60
@@ -907,15 +914,16 @@ LC857:  bit     FLGTEL                          ; C857 2C 0D 02
         txa                                     ; C869 8A
         tay                                     ; C86A A8
         lda     #$00                            ; C86B A9 00
-        jsr     LC879                           ; C86D 20 79 C8
+        jsr     GotoAY                          ; C86D 20 79 C8
         pla                                     ; C870 68
         tay                                     ; C871 A8
         pla                                     ; C872 68
         BRK_TELEMON XWSTR0                             ; C873 00 14
         lda     VARAPL+1                        ; C875 A5 D1
         ldy     VARAPL                          ; C877 A4 D0
-LC879:  pha                                     ; C879 48
-        lda     #$1F                            ; C87A A9 1F
+; Place le curseur en ligne ACC, colonne Y
+GotoAY: pha                                     ; C879 48
+        lda     #US                             ; C87A A9 1F
         BRK_TELEMON XWR0                             ; C87C 00 10
         pla                                     ; C87E 68
         clc                                     ; C87F 18
@@ -941,13 +949,13 @@ LC88B:  bit     FLGTEL                          ; C88B 2C 0D 02
         pha                                     ; C89C 48
         lda     #$00                            ; C89D A9 00
         ldy     #$01                            ; C89F A0 01
-        jsr     LC879                           ; C8A1 20 79 C8
+        jsr     GotoAY                          ; C8A1 20 79 C8
         lda     #CAN                            ; C8A4 A9 18
         BRK_TELEMON XWR0                             ; C8A6 00 10
         pla                                     ; C8A8 68
         tay                                     ; C8A9 A8
         pla                                     ; C8AA 68
-        jsr     LC879                           ; C8AB 20 79 C8
+        jsr     GotoAY                          ; C8AB 20 79 C8
         pla                                     ; C8AE 68
         tax                                     ; C8AF AA
         pla                                     ; C8B0 68
@@ -956,18 +964,21 @@ LC88B:  bit     FLGTEL                          ; C88B 2C 0D 02
         rts                                     ; C8B3 60
 
 ; ----------------------------------------------------------------------------
-LC8B4:  BRK_TELEMON XRD0                             ; C8B4 00 08
+; Gère l'arrêt temporaire (<SPACE>) ou définitif (<ESC> ou <CTRL+C>)) d'une
+; commande. Sortie avec C=1 si arrêt définitif
+CheckBreak:
+        BRK_TELEMON XRD0                             ; C8B4 00 08
         bcs     LC8CF                           ; C8B6 B0 17
-        cmp     #$1B                            ; C8B8 C9 1B
+        cmp     #ESC                            ; C8B8 C9 1B
         beq     LC8D0                           ; C8BA F0 14
-        cmp     #$03                            ; C8BC C9 03
+        cmp     #CTRL_C                            ; C8BC C9 03
         beq     LC8D0                           ; C8BE F0 10
         cmp     #" "                            ; C8C0 C9 20
         bne     LC8CF                           ; C8C2 D0 0B
         jsr     GetKey                          ; C8C4 20 D1 C8
-        cmp     #$1B                            ; C8C7 C9 1B
+        cmp     #ESC                            ; C8C7 C9 1B
         beq     LC8D0                           ; C8C9 F0 05
-        cmp     #$03                            ; C8CB C9 03
+        cmp     #CTRL_C                            ; C8CB C9 03
         beq     LC8D0                           ; C8CD F0 01
 LC8CF:  clc                                     ; C8CF 18
 LC8D0:  rts                                     ; C8D0 60
@@ -1010,7 +1021,7 @@ DispBank:
         sta     VARAPL+1                        ; C8FE 85 D1
         lda     #$00                            ; C900 A9 00
         ldy     #$0F                            ; C902 A0 0F
-        jsr     LC879                           ; C904 20 79 C8
+        jsr     GotoAY                          ; C904 20 79 C8
         lda     #<Banque_str                    ; C907 A9 B5
         ldy     #>Banque_str                    ; C909 A0 C6
         BRK_TELEMON XWSTR0                             ; C90B 00 14
@@ -1020,7 +1031,7 @@ DispBank:
         BRK_TELEMON XWR0                             ; C911 00 10
         lda     VARAPL+1                        ; C913 A5 D1
         ldy     VARAPL                          ; C915 A4 D0
-        jmp     LC879                           ; C917 4C 79 C8
+        jmp     GotoAY                          ; C917 4C 79 C8
 
 ; ----------------------------------------------------------------------------
 LC91A:  cmp     #$2E                            ; C91A C9 2E
@@ -1232,9 +1243,10 @@ LCA4A:  inx                                     ; CA4A E8
         rts                                     ; CA63 60
 
 ; ----------------------------------------------------------------------------
-; Decode opcode in ACC
+; Decode opcode. Entrée: ACC=OpCode. Sortie: ACC:=OpCode, INDIC0=Code,
+; INDIC0+1:=Longueur, INDIC2:=Index mnémonique
 DecodeOpc:
-        sta     HRS3+1                          ; CA64 85 52
+        sta     INSTR                           ; CA64 85 52
         tay                                     ; CA66 A8
         pha                                     ; CA67 48
         lda     Oplen,y                         ; CA68 B9 C6 C0
@@ -1248,7 +1260,10 @@ DecodeOpc:
         rts                                     ; CA78 60
 
 ; ----------------------------------------------------------------------------
-LCA79:  sta     VARAPL                          ; CA79 85 D0
+; Encode une instruction. Entrée: ACC=Mode, INDIC2:=Index de l'instruction dans
+; Mnemonics. Sortie: C=0->Invalide, sinon Y:=ACC:=OpCode
+EncodeMnemonic:
+        sta     VARAPL                          ; CA79 85 D0
         ldy     #$00                            ; CA7B A0 00
 LCA7D:  lda     Opmode,y                        ; CA7D B9 C6 C1
         cmp     INDIC2                          ; CA80 C5 57
@@ -1513,24 +1528,24 @@ LCC31:  lda     VARAPL+3                        ; CC31 A5 D3
 ; ----------------------------------------------------------------------------
 LCC38:  lda     Ptr1                            ; CC38 AD EE 04
         ldy     Ptr1+1                          ; CC3B AC EF 04
-        sta     Proc1+1                         ; CC3E 8D E3 04
-        sty     Proc1+2                         ; CC41 8C E4 04
+        sta     LoadByte+1                      ; CC3E 8D E3 04
+        sty     LoadByte+2                      ; CC41 8C E4 04
         rts                                     ; CC44 60
 
 ; ----------------------------------------------------------------------------
-LCC45:  lda     Proc1+1                         ; CC45 AD E3 04
+LCC45:  lda     LoadByte+1                      ; CC45 AD E3 04
         bne     LCC4D                           ; CC48 D0 03
-        dec     Proc1+2                         ; CC4A CE E4 04
-LCC4D:  dec     Proc1+1                         ; CC4D CE E3 04
+        dec     LoadByte+2                      ; CC4A CE E4 04
+LCC4D:  dec     LoadByte+1                      ; CC4D CE E3 04
         jmp     LCC5B                           ; CC50 4C 5B CC
 
 ; ----------------------------------------------------------------------------
-LCC53:  inc     Proc1+1                         ; CC53 EE E3 04
+LCC53:  inc     LoadByte+1                      ; CC53 EE E3 04
         bne     LCC5B                           ; CC56 D0 03
-        inc     Proc1+2                         ; CC58 EE E4 04
-LCC5B:  lda     #$E2                            ; CC5B A9 E2
+        inc     LoadByte+2                      ; CC58 EE E4 04
+LCC5B:  lda     #<LoadByte                      ; CC5B A9 E2
         sta     VEXBNK+1                        ; CC5D 8D 15 04
-        lda     #$04                            ; CC60 A9 04
+        lda     #>LoadByte                      ; CC60 A9 04
         sta     VEXBNK+2                        ; CC62 8D 16 04
         lda     BNKSAV                          ; CC65 AD E1 04
         sta     BNKCIB                          ; CC68 8D 17 04
@@ -1541,13 +1556,13 @@ LCC6B:  sei                                     ; CC6B 78
 
 ; ----------------------------------------------------------------------------
 LCC71:  pha                                     ; CC71 48
-        lda     Proc1+1                         ; CC72 AD E3 04
-        sta     Proc1+5                         ; CC75 8D E7 04
-        lda     Proc1+2                         ; CC78 AD E4 04
-        sta     Proc1+6                         ; CC7B 8D E8 04
+        lda     LoadByte+1                      ; CC72 AD E3 04
+        sta     StoreByte+1                     ; CC75 8D E7 04
+        lda     LoadByte+2                      ; CC78 AD E4 04
+        sta     StoreByte+2                     ; CC7B 8D E8 04
         lda     #$E6                            ; CC7E A9 E6
         sta     VEXBNK+1                        ; CC80 8D 15 04
-        lda     #$04                            ; CC83 A9 04
+        lda     #>StoreByte                     ; CC83 A9 04
         sta     VEXBNK+2                        ; CC85 8D 16 04
         lda     BNKSAV                          ; CC88 AD E1 04
         sta     BNKCIB                          ; CC8B 8D 17 04
@@ -1557,49 +1572,49 @@ LCC71:  pha                                     ; CC71 48
 ; ----------------------------------------------------------------------------
 LCC92:  ldx     Ptr2                            ; CC92 AE F0 04
         lda     Ptr2+1                          ; CC95 AD F1 04
-        cmp     Proc1+2                         ; CC98 CD E4 04
+        cmp     LoadByte+2                      ; CC98 CD E4 04
         bne     LCCA0                           ; CC9B D0 03
-        cpx     Proc1+1                         ; CC9D EC E3 04
+        cpx     LoadByte+1                      ; CC9D EC E3 04
 LCCA0:  rts                                     ; CCA0 60
 
 ; ----------------------------------------------------------------------------
 LCCA1:  clc                                     ; CCA1 18
-        lda     Proc1+1                         ; CCA2 AD E3 04
+        lda     LoadByte+1                      ; CCA2 AD E3 04
         adc     VARAPL+14                       ; CCA5 65 DE
-        sta     Proc1+1                         ; CCA7 8D E3 04
-        lda     Proc1+2                         ; CCAA AD E4 04
+        sta     LoadByte+1                      ; CCA7 8D E3 04
+        lda     LoadByte+2                      ; CCAA AD E4 04
         adc     VARAPL+15                       ; CCAD 65 DF
-        sta     Proc1+2                         ; CCAF 8D E4 04
+        sta     LoadByte+2                      ; CCAF 8D E4 04
         rts                                     ; CCB2 60
 
 ; ----------------------------------------------------------------------------
 LCCB3:  clc                                     ; CCB3 18
-        lda     Proc1+9                         ; CCB4 AD EB 04
+        lda     StoreByte2+1                    ; CCB4 AD EB 04
         adc     VARAPL+14                       ; CCB7 65 DE
-        sta     Proc1+9                         ; CCB9 8D EB 04
-        lda     Proc1+10                        ; CCBC AD EC 04
+        sta     StoreByte2+1                    ; CCB9 8D EB 04
+        lda     StoreByte2+2                    ; CCBC AD EC 04
         adc     VARAPL+15                       ; CCBF 65 DF
-        sta     Proc1+10                        ; CCC1 8D EC 04
+        sta     StoreByte2+2                    ; CCC1 8D EC 04
         rts                                     ; CCC4 60
 
 ; ----------------------------------------------------------------------------
 LCCC5:  lda     Ptr3                            ; CCC5 AD F2 04
         ldy     Ptr3+1                          ; CCC8 AC F3 04
-        sta     Proc1+9                         ; CCCB 8D EB 04
-        sty     Proc1+10                        ; CCCE 8C EC 04
+        sta     StoreByte2+1                    ; CCCB 8D EB 04
+        sty     StoreByte2+2                    ; CCCE 8C EC 04
         rts                                     ; CCD1 60
 
 ; ----------------------------------------------------------------------------
-LCCD2:  inc     Proc1+9                         ; CCD2 EE EB 04
+LCCD2:  inc     StoreByte2+1                    ; CCD2 EE EB 04
         bne     LCCDA                           ; CCD5 D0 03
-        inc     Proc1+10                        ; CCD7 EE EC 04
+        inc     StoreByte2+2                    ; CCD7 EE EC 04
 LCCDA:  rts                                     ; CCDA 60
 
 ; ----------------------------------------------------------------------------
 LCCDB:  pha                                     ; CCDB 48
-        lda     #$EA                            ; CCDC A9 EA
+        lda     #<StoreByte2                    ; CCDC A9 EA
         sta     VEXBNK+1                        ; CCDE 8D 15 04
-        lda     #$04                            ; CCE1 A9 04
+        lda     #>StoreByte2                    ; CCE1 A9 04
         sta     VEXBNK+2                        ; CCE3 8D 16 04
         lda     BNKSAV                          ; CCE6 AD E1 04
         sta     BNKCIB                          ; CCE9 8D 17 04
@@ -1698,7 +1713,9 @@ LCD85:  clc                                     ; CD85 18
 LCD86:  rts                                     ; CD86 60
 
 ; ----------------------------------------------------------------------------
-LCD87:  tya                                     ; CD87 98
+; Evalue une valeur hexa, binaire, décimale, ou un symbole)
+EvalNumber:
+        tya                                     ; CD87 98
         pha                                     ; CD88 48
         jsr     CharGot                         ; CD89 20 E8 00
         bcs     LCD94                           ; CD8C B0 06
@@ -1737,7 +1754,7 @@ LCDC7:  jsr     LC926                           ; CDC7 20 26 C9
         bcs     LCDD0                           ; CDCA B0 04
         ldx     #$00                            ; CDCC A2 00
         beq     LCDDE                           ; CDCE F0 0E
-LCDD0:  jsr     SymLookup                       ; CDD0 20 77 CE
+LCDD0:  jsr     SymbolLookup                    ; CDD0 20 77 CE
 LCDD3:  bcc     LCDDE                           ; CDD3 90 09
         pla                                     ; CDD5 68
         tay                                     ; CDD6 A8
@@ -1756,16 +1773,16 @@ LCDDE:  pla                                     ; CDDE 68
 ; ----------------------------------------------------------------------------
 ; Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if
 ; found
-LocSymLookup:
+LocalLookup:
         ldx     #$00                            ; CDE5 A2 00
         stx     VARAPL+5                        ; CDE7 86 D5
-        ldx     VARAPL2+17                      ; CDE9 A6 FC
+        ldx     LocalTblEnd                     ; CDE9 A6 FC
         stx     VARAPL+1                        ; CDEB 86 D1
-        ldx     VARAPL2+18                      ; CDED A6 FD
+        ldx     LocalTblEnd+1                   ; CDED A6 FD
         stx     VARAPL+2                        ; CDEF 86 D2
-        ldx     VARAPL2+15                      ; CDF1 A6 FA
+        ldx     LocalTblStart                   ; CDF1 A6 FA
         stx     VARAPL+12                       ; CDF3 86 DC
-        lda     VARAPL2+16                      ; CDF5 A5 FB
+        lda     LocalTblStart+1                 ; CDF5 A5 FB
         sta     VARAPL+13                       ; CDF7 85 DD
         bne     LCE2A                           ; CDF9 D0 2F
 LCDFB:  ldy     #$FF                            ; CDFB A0 FF
@@ -1814,40 +1831,40 @@ LCE46:  ldy     #$00                            ; CE46 A0 00
 ; ----------------------------------------------------------------------------
 ; Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3
 ; if found
-GlobSymLookup:
+GlobalLookup:
         ldx     #$00                            ; CE4B A2 00
         stx     VARAPL+5                        ; CE4D 86 D5
-        ldx     VARAPL2+11                      ; CE4F A6 F6
+        ldx     GlobalTblEnd                    ; CE4F A6 F6
         stx     VARAPL+1                        ; CE51 86 D1
-        ldx     VARAPL2+12                      ; CE53 A6 F7
+        ldx     GlobalTblEnd+1                  ; CE53 A6 F7
         stx     VARAPL+2                        ; CE55 86 D2
-        ldx     VARAPL2+9                       ; CE57 A6 F4
+        ldx     GlobalTblStart                  ; CE57 A6 F4
         stx     VARAPL+12                       ; CE59 86 DC
-        lda     VARAPL2+10                      ; CE5B A5 F5
+        lda     GlobalTblStart+1                ; CE5B A5 F5
         sta     VARAPL+13                       ; CE5D 85 DD
         bne     LCE2A                           ; CE5F D0 C9
 ; Find symbol in monitor symbol table, return C=1 + symbol address in VARAPL+3
 ; if found
-MonSymLookup:
+MonitorLookup:
         ldx     #$80                            ; CE61 A2 80
         stx     VARAPL+5                        ; CE63 86 D5
-        ldx     #<SymbolTableEnd                ; CE65 A2 C8
+        ldx     #<MonitorTableEnd               ; CE65 A2 C8
         stx     VARAPL+1                        ; CE67 86 D1
-        ldx     #>SymbolTableEnd                ; CE69 A2 FF
+        ldx     #>MonitorTableEnd               ; CE69 A2 FF
         stx     VARAPL+2                        ; CE6B 86 D2
-        ldx     #<SymbolTable                   ; CE6D A2 18
+        ldx     #<MonitorTable                  ; CE6D A2 18
         stx     VARAPL+12                       ; CE6F 86 DC
-        lda     #>SymbolTable                   ; CE71 A9 F0
+        lda     #>MonitorTable                  ; CE71 A9 F0
         sta     VARAPL+13                       ; CE73 85 DD
         bne     LCE2A                           ; CE75 D0 B3
 ; Find symbol in global, local, monitor symbol table, return C=1 + symbol
 ; address in VARAPL+3 if found
-SymLookup:
-        jsr     GlobSymLookup                   ; CE77 20 4B CE
+SymbolLookup:
+        jsr     GlobalLookup                    ; CE77 20 4B CE
         bcs     LCE84                           ; CE7A B0 08
-        jsr     LocSymLookup                    ; CE7C 20 E5 CD
+        jsr     LocalLookup                     ; CE7C 20 E5 CD
         bcs     LCE84                           ; CE7F B0 03
-        jsr     MonSymLookup                    ; CE81 20 61 CE
+        jsr     MonitorLookup                   ; CE81 20 61 CE
 LCE84:  rts                                     ; CE84 60
 
 ; ----------------------------------------------------------------------------
@@ -1862,7 +1879,10 @@ IncTXTPTR:
 LCE8F:  rts                                     ; CE8F 60
 
 ; ----------------------------------------------------------------------------
-LCE90:  cmp     #'"'                            ; CE90 C9 22
+; Evalue un terme (caractère ASCII, >nnnn, <nnnn, valeur hexa, binaire,
+; décimale, symbole)
+EvalTerme:
+        cmp     #'"'                            ; CE90 C9 22
         bne     LCEB3                           ; CE92 D0 1F
         sty     VARAPL                          ; CE94 84 D0
         ldy     #$01                            ; CE96 A0 01
@@ -1885,7 +1905,7 @@ LCEA6:  jsr     IncTXTPTR                       ; CEA6 20 85 CE
 LCEB3:  cmp     #"<"                            ; CEB3 C9 3C
         bne     LCEC4                           ; CEB5 D0 0D
         jsr     CharGet                         ; CEB7 20 E2 00
-        jsr     LCD87                           ; CEBA 20 87 CD
+        jsr     EvalNumber                      ; CEBA 20 87 CD
         bcc     LCF03                           ; CEBD 90 44
         ldx     #$00                            ; CEBF A2 00
         stx     VARAPL+4                        ; CEC1 86 D4
@@ -1895,7 +1915,7 @@ LCEB3:  cmp     #"<"                            ; CEB3 C9 3C
 LCEC4:  cmp     #">"                            ; CEC4 C9 3E
         bne     LCED9                           ; CEC6 D0 11
         jsr     CharGet                         ; CEC8 20 E2 00
-        jsr     LCD87                           ; CECB 20 87 CD
+        jsr     EvalNumber                      ; CECB 20 87 CD
         bcc     LCF03                           ; CECE 90 33
         ldx     VARAPL+4                        ; CED0 A6 D4
         stx     VARAPL+3                        ; CED2 86 D3
@@ -1904,14 +1924,14 @@ LCEC4:  cmp     #">"                            ; CEC4 C9 3E
         rts                                     ; CED8 60
 
 ; ----------------------------------------------------------------------------
-LCED9:  jsr     LCD87                           ; CED9 20 87 CD
+LCED9:  jsr     EvalNumber                      ; CED9 20 87 CD
         bcc     LCF03                           ; CEDC 90 25
         rts                                     ; CEDE 60
 
 ; ----------------------------------------------------------------------------
 ; Evalue une expression
 EvalExpr:
-        jsr     LCE90                           ; CEDF 20 90 CE
+        jsr     EvalTerme                       ; CEDF 20 90 CE
         ldx     VARAPL+3                        ; CEE2 A6 D3
         stx     VARAPL+14                       ; CEE4 86 DE
         ldx     VARAPL+4                        ; CEE6 A6 D4
@@ -1942,7 +1962,7 @@ LCF03:  jmp     LCF98                           ; CF03 4C 98 CF
 ; Evalue une somme
 EvalSomme:
         jsr     CharGet                         ; CF06 20 E2 00
-        jsr     LCE90                           ; CF09 20 90 CE
+        jsr     EvalTerme                       ; CF09 20 90 CE
         pha                                     ; CF0C 48
         clc                                     ; CF0D 18
         lda     VARAPL+14                       ; CF0E A5 DE
@@ -1959,7 +1979,7 @@ EvalSomme:
 ; Evalue une différence
 EvalDifference:
         jsr     CharGet                         ; CF1E 20 E2 00
-        jsr     LCE90                           ; CF21 20 90 CE
+        jsr     EvalTerme                       ; CF21 20 90 CE
         pha                                     ; CF24 48
         sec                                     ; CF25 38
         lda     VARAPL+14                       ; CF26 A5 DE
@@ -1973,7 +1993,9 @@ EvalDifference:
         rts                                     ; CF35 60
 
 ; ----------------------------------------------------------------------------
-LCF36:  pla                                     ; CF36 68
+; Initialise S à $FE
+InitStack:
+        pla                                     ; CF36 68
         tay                                     ; CF37 A8
         pla                                     ; CF38 68
         ldx     #$FE                            ; CF39 A2 FE
@@ -1984,7 +2006,9 @@ LCF36:  pla                                     ; CF36 68
         rts                                     ; CF3F 60
 
 ; ----------------------------------------------------------------------------
-LCF40:  clc                                     ; CF40 18
+; Initialise TXTPTR = SCEDEB-1 et place un 0 en (TXTPTR)
+InitTXTPTR:
+        clc                                     ; CF40 18
         lda     SCEDEB                          ; CF41 A5 5C
         adc     #$FF                            ; CF43 69 FF
         sta     TXTPTR                          ; CF45 85 E9
@@ -2020,17 +2044,19 @@ LCF60:  lda     #<BUFEDT                        ; CF60 A9 90
         tya                                     ; CF70 98
         BRK_TELEMON XINSER                             ; CF71 00 2E
 ; Initialise les pointeurs de la table des symboles locaux
-LocTblInit:
+LocalTblInit:
         lda     SCEFIN                          ; CF73 A5 5E
         ldy     SCEFIN+1                        ; CF75 A4 5F
-        sta     VARAPL2+15                      ; CF77 85 FA
-        sta     VARAPL2+17                      ; CF79 85 FC
-        sty     VARAPL2+16                      ; CF7B 84 FB
-        sty     VARAPL2+18                      ; CF7D 84 FD
+        sta     LocalTblStart                   ; CF77 85 FA
+        sta     LocalTblEnd                     ; CF79 85 FC
+        sty     LocalTblStart+1                 ; CF7B 84 FB
+        sty     LocalTblEnd+1                   ; CF7D 84 FD
         rts                                     ; CF7F 60
 
 ; ----------------------------------------------------------------------------
-LCF80:  lda     #XLPR                           ; CF80 A9 8E
+; Ferme l'imprimante sur le canal 0 et ouvre l'écran
+PrinterOff:
+        lda     #XLPR                           ; CF80 A9 8E
         BRK_TELEMON XCL0                             ; CF82 00 04
         lda     #XSCR                           ; CF84 A9 88
         BRK_TELEMON XOP0                             ; CF86 00 00
@@ -2039,7 +2065,9 @@ LCF80:  lda     #XLPR                           ; CF80 A9 8E
         rts                                     ; CF8C 60
 
 ; ----------------------------------------------------------------------------
-LCF8D:  BRK_TELEMON XTSTLP                             ; CF8D 00 1E
+; Ouvre l'imprimante sur le canal 0 et ferme l'écran
+PrinterOn:
+        BRK_TELEMON XTSTLP                             ; CF8D 00 1E
         lda     #XSCR                           ; CF8F A9 88
         BRK_TELEMON XCL0                             ; CF91 00 04
         lda     #XLPR                           ; CF93 A9 8E
@@ -2049,11 +2077,11 @@ LCF8D:  BRK_TELEMON XTSTLP                             ; CF8D 00 1E
 ; ----------------------------------------------------------------------------
 LCF98:  txa                                     ; CF98 8A
         pha                                     ; CF99 48
-        jsr     LCF80                           ; CF9A 20 80 CF
+        jsr     PrinterOff                      ; CF9A 20 80 CF
         pla                                     ; CF9D 68
         tax                                     ; CF9E AA
         jsr     DispErrorX                      ; CF9F 20 1B C8
-        jsr     LCF36                           ; CFA2 20 36 CF
+        jsr     InitStack                       ; CFA2 20 36 CF
         lda     VARAPL2+8                       ; CFA5 A5 F3
         bne     LCFB8                           ; CFA7 D0 0F
         lda     #>BUFEDT                        ; CFA9 A9 05
@@ -2074,7 +2102,7 @@ LCFC2:  ldx     #$06                            ; CFC2 A2 06
 LCFC4:  ldy     #$80                            ; CFC4 A0 80
         bmi     LCFD2                           ; CFC6 30 0A
 LCFC8:  jsr     LCB5A                           ; CFC8 20 5A CB
-LCFCB:  jsr     LCF80                           ; CFCB 20 80 CF
+LCFCB:  jsr     PrinterOff                      ; CFCB 20 80 CF
         ldx     #$00                            ; CFCE A2 00
         ldy     #$00                            ; CFD0 A0 00
 LCFD2:  lda     #$6E                            ; CFD2 A9 6E
@@ -2089,7 +2117,7 @@ LCFD2:  lda     #$6E                            ; CFD2 A9 6E
         stx     VARAPL2+8                       ; CFE3 86 F3
         cpx     #$00                            ; CFE5 E0 00
         bne     LD010                           ; CFE7 D0 27
-        cmp     #$0D                            ; CFE9 C9 0D
+        cmp     #CR                             ; CFE9 C9 0D
         bne     LCFCB                           ; CFEB D0 DE
         jsr     SkipSpaces                      ; CFED 20 2D CA
         beq     LCFCB                           ; CFF0 F0 D9
@@ -2111,9 +2139,9 @@ ExecCmd:asl                                     ; D000 0A
         jmp     CharGet                         ; D00D 4C E2 00
 
 ; ----------------------------------------------------------------------------
-LD010:  cmp     #$03                            ; D010 C9 03
+LD010:  cmp     #CTRL_C                            ; D010 C9 03
         beq     LCFCB                           ; D012 F0 B7
-        cmp     #$0A                            ; D014 C9 0A
+        cmp     #LF                             ; D014 C9 0A
         bne     LD027                           ; D016 D0 0F
         lda     VARAPL+16                       ; D018 A5 E0
         ldy     VARAPL+17                       ; D01A A4 E1
@@ -2123,7 +2151,7 @@ LD010:  cmp     #$03                            ; D010 C9 03
         jmp     LCFC2                           ; D024 4C C2 CF
 
 ; ----------------------------------------------------------------------------
-LD027:  cmp     #$0B                            ; D027 C9 0B
+LD027:  cmp     #VT                             ; D027 C9 0B
         bne     LD040                           ; D029 D0 15
         BRK_TELEMON XWR0                             ; D02B 00 10
         lda     #CR                             ; D02D A9 0D
@@ -2182,22 +2210,22 @@ LD076:  jsr     GetKey                          ; D076 20 D1 C8
         sta     LPRY                            ; D08E 8D 87 02
         lda     #$08                            ; D091 A9 08
         sta     SCEDEB+1                        ; D093 85 5D
-        lda     #$00                            ; D095 A9 00
-        sta     VARAPL2+9                       ; D097 85 F4
-        sta     VARAPL2+11                      ; D099 85 F6
-        lda     #$FF                            ; D09B A9 FF
-        sta     VARAPL2+13                      ; D09D 85 F8
-        lda     #$30                            ; D09F A9 30
-        sta     VARAPL2+10                      ; D0A1 85 F5
-        sta     VARAPL2+12                      ; D0A3 85 F7
-        lda     #$3F                            ; D0A5 A9 3F
-        sta     VARAPL2+14                      ; D0A7 85 F9
+        lda     #<GlobalTableDefaultStart       ; D095 A9 00
+        sta     GlobalTblStart                  ; D097 85 F4
+        sta     GlobalTblEnd                    ; D099 85 F6
+        lda     #<GlobalTableDefaultLimit       ; D09B A9 FF
+        sta     GlobalTblLimit                  ; D09D 85 F8
+        lda     #>GlobalTableDefaultStart       ; D09F A9 30
+        sta     GlobalTblStart+1                ; D0A1 85 F5
+        sta     GlobalTblEnd+1                  ; D0A3 85 F7
+        lda     #>GlobalTableDefaultLimit       ; D0A5 A9 3F
+        sta     GlobalTblLimit+1                ; D0A7 85 F9
         jsr     Clear                           ; D0A9 20 20 D1
         lda     #$42                            ; D0AC A9 42
         sta     LPRFY                           ; D0AE 8D 89 02
         sta     LPRSY                           ; D0B1 8D 8B 02
 Warm_start:
-        jsr     LocTblInit                      ; D0B4 20 73 CF
+        jsr     LocalTblInit                    ; D0B4 20 73 CF
         ldx     #$10                            ; D0B7 A2 10
 LD0B9:  lda     _CharGet,x                      ; D0B9 BD F0 D0
         sta     CharGet,x                       ; D0BC 95 E2
@@ -2205,7 +2233,7 @@ LD0B9:  lda     _CharGet,x                      ; D0B9 BD F0 D0
         bpl     LD0B9                           ; D0BF 10 F8
         ldy     #$0B                            ; D0C1 A0 0B
 LD0C3:  lda     _Proc1,y                        ; D0C3 B9 01 D1
-        sta     Proc1,y                         ; D0C6 99 E2 04
+        sta     LoadByte,y                      ; D0C6 99 E2 04
         dey                                     ; D0C9 88
         bpl     LD0C3                           ; D0CA 10 F7
         tya                                     ; D0CC 98
@@ -2235,7 +2263,7 @@ _CharGot:
         lda     teleass_irq_vector+1            ; D0F6 AD FF FF
         cmp     #" "                            ; D0F9 C9 20
         beq     _CharGet                        ; D0FB F0 F3
-        jsr     LD10D                           ; D0FD 20 0D D1
+        jsr     IsNumeric                       ; D0FD 20 0D D1
         rts                                     ; D100 60
 
 ; ----------------------------------------------------------------------------
@@ -2252,7 +2280,10 @@ _Proc1: lda     teleass_irq_vector+1            ; D101 AD FF FF
         rts                                     ; D10C 60
 
 ; ----------------------------------------------------------------------------
-LD10D:  cmp     #$00                            ; D10D C9 00
+; Vérifie si ACC contient caractère entre '0' et '9' ou un $00 ou un '.
+; Sortie C=0-> '0' à '9', Z=1->$00 ou ', sinon C=1 & Z=0
+IsNumeric:
+        cmp     #$00                            ; D10D C9 00
         beq     LD11F                           ; D10F F0 0E
         cmp     #"'"                            ; D111 C9 27
         beq     LD11F                           ; D113 F0 0A
@@ -2277,7 +2308,7 @@ Clear:  ldy     #$00                            ; D120 A0 00
         lda     SCEDEB+1                        ; D12C A5 5D
         adc     #$00                            ; D12E 69 00
         sta     SCEFIN+1                        ; D130 85 5F
-        jmp     LocTblInit                      ; D132 4C 73 CF
+        jmp     LocalTblInit                    ; D132 4C 73 CF
 
 ; ----------------------------------------------------------------------------
 ; NEW : efface le programme source en mémoire
@@ -2423,31 +2454,31 @@ LD208:  lda     #<XLOAD                         ; D208 A9 62
         bpl     LD226                           ; D212 10 12
         bit     VSALO0                          ; D214 2C 28 05
         bvs     LD226                           ; D217 70 0D
-        lda     INPIS                           ; D219 AD 2D 05
-        ldy     INSEC                           ; D21C AC 2E 05
+        lda     DESALO                          ; D219 AD 2D 05
+        ldy     DESALO+1                        ; D21C AC 2E 05
         sta     SCEDEB                          ; D21F 85 5C
         sty     SCEDEB+1                        ; D221 84 5D
         jsr     LD229                           ; D223 20 29 D2
 LD226:  jmp     LCFCB                           ; D226 4C CB CF
 
 ; ----------------------------------------------------------------------------
-LD229:  lda     PARPIS                          ; D229 AD 2F 05
-        ldy     PARSEC                          ; D22C AC 30 05
+LD229:  lda     FISALO                          ; D229 AD 2F 05
+        ldy     FISALO+1                        ; D22C AC 30 05
         sta     SCEFIN                          ; D22F 85 5E
         sty     SCEFIN+1                        ; D231 84 5F
-        jsr     LocTblInit                      ; D233 20 73 CF
-LD236:  cpy     VARAPL2+10                      ; D236 C4 F5
+        jsr     LocalTblInit                    ; D233 20 73 CF
+LD236:  cpy     GlobalTblStart+1                ; D236 C4 F5
         bcc     LD266                           ; D238 90 2C
         bne     LD240                           ; D23A D0 04
-        cmp     VARAPL2+9                       ; D23C C5 F4
+        cmp     GlobalTblStart                  ; D23C C5 F4
         bcc     LD266                           ; D23E 90 26
-LD240:  sta     VARAPL2+9                       ; D240 85 F4
-        sty     VARAPL2+10                      ; D242 84 F5
-        sta     VARAPL2+11                      ; D244 85 F6
-        sty     VARAPL2+12                      ; D246 84 F7
-        sta     VARAPL2+13                      ; D248 85 F8
+LD240:  sta     GlobalTblStart                  ; D240 85 F4
+        sty     GlobalTblStart+1                ; D242 84 F5
+        sta     GlobalTblEnd                    ; D244 85 F6
+        sty     GlobalTblEnd+1                  ; D246 84 F7
+        sta     GlobalTblLimit                  ; D248 85 F8
         iny                                     ; D24A C8
-        sty     VARAPL2+14                      ; D24B 84 F9
+        sty     GlobalTblLimit+1                ; D24B 84 F9
         ldx     #$19                            ; D24D A2 19
         jmp     DispErrorX                      ; D24F 4C 1B C8
 
@@ -2479,8 +2510,8 @@ EvalWord:
 
 ; ----------------------------------------------------------------------------
 LD273:  jsr     LD267                           ; D273 20 67 D2
-        sta     INPIS                           ; D276 8D 2D 05
-        sty     INSEC                           ; D279 8C 2E 05
+        sta     DESALO                          ; D276 8D 2D 05
+        sty     DESALO+1                        ; D279 8C 2E 05
         txa                                     ; D27C 8A
         rts                                     ; D27D 60
 
@@ -2515,7 +2546,7 @@ LD2A8:  jsr     LCC92                           ; D2A8 20 92 CC
         bcs     LD2B0                           ; D2AB B0 03
         sec                                     ; D2AD 38
         bcs     LD2B3                           ; D2AE B0 03
-LD2B0:  jsr     LC8B4                           ; D2B0 20 B4 C8
+LD2B0:  jsr     CheckBreak                      ; D2B0 20 B4 C8
 LD2B3:  php                                     ; D2B3 08
         jsr     LCB5A                           ; D2B4 20 5A CB
         plp                                     ; D2B7 28
@@ -2530,7 +2561,7 @@ DESAS:  ldy     #$00                            ; D2B9 A0 00
 LDESAS: ldy     #$80                            ; D2BC A0 80
         sty     XLPRBI                          ; D2BE 84 48
         jsr     LD368                           ; D2C0 20 68 D3
-LD2C3:  jsr     LD3CB                           ; D2C3 20 CB D3
+LD2C3:  jsr     DesasInstr                      ; D2C3 20 CB D3
         jsr     LCC53                           ; D2C6 20 53 CC
         jsr     LD2A8                           ; D2C9 20 A8 D2
         bcc     LD2C3                           ; D2CC 90 F5
@@ -2550,8 +2581,8 @@ LD2E2:  jsr     LC8DC                           ; D2E2 20 DC C8
         jmp     LCFCB                           ; D2E5 4C CB CF
 
 ; ----------------------------------------------------------------------------
-LD2E8:  lda     Proc1+1                         ; D2E8 AD E3 04
-        ldy     Proc1+2                         ; D2EB AC E4 04
+LD2E8:  lda     LoadByte+1                      ; D2E8 AD E3 04
+        ldy     LoadByte+2                      ; D2EB AC E4 04
         sta     VARAPL+8                        ; D2EE 85 D8
         sty     VARAPL+9                        ; D2F0 84 D9
         jsr     DispWord                        ; D2F2 20 8D C7
@@ -2568,9 +2599,9 @@ LD301:  jsr     LCC5B                           ; D301 20 5B CC
         bne     LD301                           ; D30F D0 F0
         jsr     DispSpace                       ; D311 20 35 C7
         lda     VARAPL+8                        ; D314 A5 D8
-        sta     Proc1+1                         ; D316 8D E3 04
+        sta     LoadByte+1                      ; D316 8D E3 04
         lda     VARAPL+9                        ; D319 A5 D9
-        sta     Proc1+2                         ; D31B 8D E4 04
+        sta     LoadByte+2                      ; D31B 8D E4 04
 LD31E:  jsr     LCC5B                           ; D31E 20 5B CC
         jsr     LC716                           ; D321 20 16 C7
         jsr     LCC53                           ; D324 20 53 CC
@@ -2621,8 +2652,8 @@ IllegalValErr:
 
 ; ----------------------------------------------------------------------------
 LD368:  jsr     EvalWord                        ; D368 20 6A D2
-        sta     Proc1+1                         ; D36B 8D E3 04
-        sty     Proc1+2                         ; D36E 8C E4 04
+        sta     LoadByte+1                      ; D36B 8D E3 04
+        sty     LoadByte+2                      ; D36E 8C E4 04
         lda     DEFBNK                          ; D371 AD E0 04
         sta     BNKSAV                          ; D374 8D E1 04
         lda     #$FF                            ; D377 A9 FF
@@ -2648,24 +2679,24 @@ LD39E:  stx     BNKSAV                          ; D39E 8E E1 04
         bne     SyntaxErr2                      ; D3A2 D0 BC
 LD3A4:  bit     XLPRBI                          ; D3A4 24 48
         bpl     LD3AB                           ; D3A6 10 03
-        jsr     LCF8D                           ; D3A8 20 8D CF
+        jsr     PrinterOn                       ; D3A8 20 8D CF
 LD3AB:  jmp     LCB5A                           ; D3AB 4C 5A CB
 
 ; ----------------------------------------------------------------------------
 LD3AE:  clc                                     ; D3AE 18
-        ldx     Proc1+1                         ; D3AF AE E3 04
-        ldy     Proc1+2                         ; D3B2 AC E4 04
+        ldx     LoadByte+1                      ; D3AF AE E3 04
+        ldy     LoadByte+2                      ; D3B2 AC E4 04
         inx                                     ; D3B5 E8
         bne     LD3B9                           ; D3B6 D0 01
         iny                                     ; D3B8 C8
 LD3B9:  clc                                     ; D3B9 18
         txa                                     ; D3BA 8A
-        adc     HRS4                            ; D3BB 65 53
+        adc     INSTR+1                         ; D3BB 65 53
         tax                                     ; D3BD AA
         ror                                     ; D3BE 6A
-        eor     HRS4                            ; D3BF 45 53
+        eor     INSTR+1                         ; D3BF 45 53
         bpl     LD3CA                           ; D3C1 10 07
-        lda     HRS4                            ; D3C3 A5 53
+        lda     INSTR+1                         ; D3C3 A5 53
         bpl     LD3C9                           ; D3C5 10 02
         dey                                     ; D3C7 88
         rts                                     ; D3C8 60
@@ -2675,8 +2706,10 @@ LD3C9:  iny                                     ; D3C9 C8
 LD3CA:  rts                                     ; D3CA 60
 
 ; ----------------------------------------------------------------------------
-LD3CB:  lda     Proc1+1                         ; D3CB AD E3 04
-        ldy     Proc1+2                         ; D3CE AC E4 04
+; Désassemble une instruction et l'affiche
+DesasInstr:
+        lda     LoadByte+1                      ; D3CB AD E3 04
+        ldy     LoadByte+2                      ; D3CE AC E4 04
         jsr     DispWord                        ; D3D1 20 8D C7
         jsr     DispSpace                       ; D3D4 20 35 C7
         jsr     DispSpace                       ; D3D7 20 35 C7
@@ -2687,14 +2720,14 @@ LD3CB:  lda     Proc1+1                         ; D3CB AD E3 04
         beq     LD405                           ; D3E5 F0 1E
         jsr     DispSpace                       ; D3E7 20 35 C7
         jsr     LCC53                           ; D3EA 20 53 CC
-        sta     HRS4                            ; D3ED 85 53
+        sta     INSTR+1                         ; D3ED 85 53
         jsr     DispByte                        ; D3EF 20 92 C7
         ldx     INDIC0+1                        ; D3F2 A6 56
         dex                                     ; D3F4 CA
         beq     LD408                           ; D3F5 F0 11
         jsr     DispSpace                       ; D3F7 20 35 C7
         jsr     LCC53                           ; D3FA 20 53 CC
-        sta     HRS4+1                          ; D3FD 85 54
+        sta     INSTR+2                         ; D3FD 85 54
         jsr     DispByte                        ; D3FF 20 92 C7
         ldy     #$02                            ; D402 A0 02
         .byte   $2C                             ; D404 2C
@@ -2726,8 +2759,8 @@ LD439:  BRK_TELEMON XWR0                             ; D439 00 10
 LD43B:  lda     #"$"                            ; D43B A9 24
         BRK_TELEMON XWR0                             ; D43D 00 10
         ldx     INDIC0+1                        ; D43F A6 56
-        lda     HRS4                            ; D441 A5 53
-        ldy     HRS4+1                          ; D443 A4 54
+        lda     INSTR+1                         ; D441 A5 53
+        ldy     INSTR+2                         ; D443 A4 54
         dex                                     ; D445 CA
         beq     LD44D                           ; D446 F0 05
         jsr     DispWord                        ; D448 20 8D C7
@@ -2902,7 +2935,7 @@ LLIST:  lda     #$80                            ; D550 A9 80
         bcs     LD586                           ; D55C B0 28
         bit     XLPRBI                          ; D55E 24 48
         bpl     LD565                           ; D560 10 03
-        jsr     LCF8D                           ; D562 20 8D CF
+        jsr     PrinterOn                       ; D562 20 8D CF
 LD565:  ldy     #$01                            ; D565 A0 01
         lda     (VARAPL+12),y                   ; D567 B1 DC
         tax                                     ; D569 AA
@@ -3081,7 +3114,7 @@ LDIR:   ldx     #$80                            ; D691 A2 80
         bne     LD6AC                           ; D69C D0 0E
         bit     XLPRBI                          ; D69E 24 48
         bpl     LD6A5                           ; D6A0 10 03
-        jsr     LCF8D                           ; D6A2 20 8D CF
+        jsr     PrinterOn                       ; D6A2 20 8D CF
 LD6A5:  lda     #<XDIRN                         ; D6A5 A9 56
         ldy     #>XDIRN                         ; D6A7 A0 FF
         jmp     LD252                           ; D6A9 4C 52 D2
@@ -3105,13 +3138,13 @@ SAVEM:  ldx     #$40                            ; D6B8 A2 40
         ldx     #$80                            ; D6BD A2 80
         stx     FTYPE                           ; D6BF 8E 2C 05
         ldx     SCEDEB                          ; D6C2 A6 5C
-        stx     INPIS                           ; D6C4 8E 2D 05
+        stx     DESALO                          ; D6C4 8E 2D 05
         ldx     SCEDEB+1                        ; D6C7 A6 5D
-        stx     INSEC                           ; D6C9 8E 2E 05
+        stx     DESALO+1                        ; D6C9 8E 2E 05
         ldx     SCEFIN                          ; D6CC A6 5E
-        stx     PARPIS                          ; D6CE 8E 2F 05
+        stx     FISALO                          ; D6CE 8E 2F 05
         ldx     SCEFIN+1                        ; D6D1 A6 5F
-        stx     PARSEC                          ; D6D3 8E 30 05
+        stx     FISALO+1                        ; D6D3 8E 30 05
         ldx     #$00                            ; D6D6 A2 00
         stx     EXSALO                          ; D6D8 8E 31 05
         stx     EXSALO+1                        ; D6DB 8E 32 05
@@ -3135,8 +3168,8 @@ SAVEM:  ldx     #$40                            ; D6B8 A2 40
         cmp     #"E"                            ; D703 C9 45
         bne     LD6AC                           ; D705 D0 A5
         jsr     LD267                           ; D707 20 67 D2
-        sta     PARPIS                          ; D70A 8D 2F 05
-        sty     PARSEC                          ; D70D 8C 30 05
+        sta     FISALO                          ; D70A 8D 2F 05
+        sty     FISALO+1                        ; D70D 8C 30 05
         txa                                     ; D710 8A
         beq     LD72B                           ; D711 F0 18
         jsr     EvalComma                       ; D713 20 AC D1
@@ -3264,8 +3297,8 @@ LD7CE:  sta     BUFNOM+1                        ; D7CE 8D 18 05
 ; INIT : initialise et formatte une disquette (cf Stratsed)
 INIT:   tax                                     ; D7DB AA
         bne     SyntaxErr4                      ; D7DC D0 BB
-        sta     PARPIS                          ; D7DE 8D 2F 05
-        sta     PARSEC                          ; D7E1 8D 30 05
+        sta     FISALO                          ; D7DE 8D 2F 05
+        sta     FISALO+1                        ; D7E1 8D 30 05
         lda     #<XINITI                        ; D7E4 A9 5C
         ldy     #>XINITI                        ; D7E6 A0 FF
         jsr     EXBNK0ERR                       ; D7E8 20 5E D2
@@ -3296,7 +3329,7 @@ LD806:  jsr     IncTXTPTR                       ; D806 20 85 CE
 LD80E:  lda     Ptr1+1                          ; D80E AD EF 04
         bne     OrgDefErr                       ; D811 D0 3C
         jsr     CharGet                         ; D813 20 E2 00
-        jsr     LCD87                           ; D816 20 87 CD
+        jsr     EvalNumber                      ; D816 20 87 CD
         bcc     LD85D                           ; D819 90 42
         lda     VARAPL+3                        ; D81B A5 D3
         sta     Ptr1                            ; D81D 8D EE 04
@@ -3363,42 +3396,42 @@ UnknOrgErr:
 LD85D:  jmp     LCF98                           ; D85D 4C 98 CF
 
 ; ----------------------------------------------------------------------------
-LD860:  jsr     LocSymLookup                    ; D860 20 E5 CD
+LD860:  jsr     LocalLookup                     ; D860 20 E5 CD
         bcs     LabelDefErr                     ; D863 B0 E7
         bit     HRSY                            ; D865 24 47
         bpl     LD891                           ; D867 10 28
         cmp     #"."                            ; D869 C9 2E
         beq     LD891                           ; D86B F0 24
-LD86D:  jsr     GlobSymLookup                   ; D86D 20 4B CE
+LD86D:  jsr     GlobalLookup                    ; D86D 20 4B CE
         bcs     LD8C6                           ; D870 B0 54
-        lda     VARAPL2+11                      ; D872 A5 F6
+        lda     GlobalTblEnd                    ; D872 A5 F6
         adc     #$08                            ; D874 69 08
         tax                                     ; D876 AA
-        lda     VARAPL2+12                      ; D877 A5 F7
+        lda     GlobalTblEnd+1                  ; D877 A5 F7
         adc     #$00                            ; D879 69 00
-        cmp     VARAPL2+14                      ; D87B C5 F9
+        cmp     GlobalTblLimit+1                ; D87B C5 F9
         bne     LD881                           ; D87D D0 02
-        cpx     VARAPL2+13                      ; D87F E4 F8
+        cpx     GlobalTblLimit                  ; D87F E4 F8
 LD881:  bcs     MemFullErr                      ; D881 B0 C3
-        stx     VARAPL2+11                      ; D883 86 F6
-        sta     VARAPL2+12                      ; D885 85 F7
+        stx     GlobalTblEnd                    ; D883 86 F6
+        sta     GlobalTblEnd+1                  ; D885 85 F7
         stx     VARAPL+1                        ; D887 86 D1
         sta     VARAPL+2                        ; D889 85 D2
         lda     #$00                            ; D88B A9 00
         sta     (VARAPL+1),y                    ; D88D 91 D1
         beq     LD8AF                           ; D88F F0 1E
 LD891:  clc                                     ; D891 18
-        lda     VARAPL2+17                      ; D892 A5 FC
+        lda     LocalTblEnd                     ; D892 A5 FC
         adc     #$08                            ; D894 69 08
         tax                                     ; D896 AA
-        lda     VARAPL2+18                      ; D897 A5 FD
+        lda     LocalTblEnd+1                   ; D897 A5 FD
         adc     #$00                            ; D899 69 00
-        cmp     VARAPL2+10                      ; D89B C5 F5
+        cmp     GlobalTblStart+1                ; D89B C5 F5
         bne     LD8A1                           ; D89D D0 02
-        cpx     VARAPL2+9                       ; D89F E4 F4
+        cpx     GlobalTblStart                  ; D89F E4 F4
 LD8A1:  bcs     MemFullErr                      ; D8A1 B0 A3
-        stx     VARAPL2+17                      ; D8A3 86 FC
-        sta     VARAPL2+18                      ; D8A5 85 FD
+        stx     LocalTblEnd                     ; D8A3 86 FC
+        sta     LocalTblEnd+1                   ; D8A5 85 FD
         stx     VARAPL+1                        ; D8A7 86 D1
         sta     VARAPL+2                        ; D8A9 85 D2
         lda     #$00                            ; D8AB A9 00
@@ -3431,10 +3464,10 @@ LD8D4:  ldy     #$06                            ; D8D4 A0 06
         cmp     #$B9                            ; D8DA C9 B9
         beq     LD8EC                           ; D8DC F0 0E
         pha                                     ; D8DE 48
-        lda     Proc1+1                         ; D8DF AD E3 04
+        lda     LoadByte+1                      ; D8DF AD E3 04
         sta     (VARAPL+12),y                   ; D8E2 91 DC
         iny                                     ; D8E4 C8
-        lda     Proc1+2                         ; D8E5 AD E4 04
+        lda     LoadByte+2                      ; D8E5 AD E4 04
         sta     (VARAPL+12),y                   ; D8E8 91 DC
         pla                                     ; D8EA 68
         rts                                     ; D8EB 60
@@ -3516,7 +3549,7 @@ LD970:  jsr     CharGet                         ; D970 20 E2 00
 LD97F:  jsr     LD827                           ; D97F 20 27 D8
         ldx     #$00                            ; D982 A2 00
         lda     INDIC0                          ; D984 A5 55
-        jsr     LCA79                           ; D986 20 79 CA
+        jsr     EncodeMnemonic                  ; D986 20 79 CA
         bcc     LD98F                           ; D989 90 04
         ldy     VARAPL+15                       ; D98B A4 DF
         beq     LD99B                           ; D98D F0 0C
@@ -3524,7 +3557,7 @@ LD98F:  inx                                     ; D98F E8
         lda     INDIC0                          ; D990 A5 55
         and     #$FE                            ; D992 29 FE
         ora     #$02                            ; D994 09 02
-LD996:  jsr     LCA79                           ; D996 20 79 CA
+LD996:  jsr     EncodeMnemonic                  ; D996 20 79 CA
         bcc     LD99D                           ; D999 90 02
 LD99B:  inx                                     ; D99B E8
         rts                                     ; D99C 60
@@ -3552,11 +3585,11 @@ LD9BD:  jmp     LD827                           ; D9BD 4C 27 D8
 
 ; ----------------------------------------------------------------------------
 LD9C0:  clc                                     ; D9C0 18
-        lda     Proc1+1                         ; D9C1 AD E3 04
+        lda     LoadByte+1                      ; D9C1 AD E3 04
         adc     #$02                            ; D9C4 69 02
         sta     VARAPL+14                       ; D9C6 85 DE
         sta     VARAPL+8                        ; D9C8 85 D8
-        lda     Proc1+2                         ; D9CA AD E4 04
+        lda     LoadByte+2                      ; D9CA AD E4 04
         adc     #$00                            ; D9CD 69 00
         sta     VARAPL+15                       ; D9CF 85 DF
         sta     VARAPL+9                        ; D9D1 85 D9
@@ -3578,7 +3611,7 @@ LD9EB:  jmp     OutOfRangeBraErr2               ; D9EB 4C 55 D8
 LD9EE:  lda     VARAPL+14                       ; D9EE A5 DE
         bmi     LD9EB                           ; D9F0 30 F9
 LD9F2:  lda     #$C1                            ; D9F2 A9 C1
-        jsr     LCA79                           ; D9F4 20 79 CA
+        jsr     EncodeMnemonic                  ; D9F4 20 79 CA
         ldx     #$01                            ; D9F7 A2 01
         rts                                     ; D9F9 60
 
@@ -3714,8 +3747,8 @@ LDAEA:  jsr     CharGet                         ; DAEA 20 E2 00
         jmp     LCCA1                           ; DAF3 4C A1 CC
 
 ; ----------------------------------------------------------------------------
-LDAF6:  lda     Proc1+1                         ; DAF6 AD E3 04
-        ldy     Proc1+2                         ; DAF9 AC E4 04
+LDAF6:  lda     LoadByte+1                      ; DAF6 AD E3 04
+        ldy     LoadByte+2                      ; DAF9 AC E4 04
         jsr     DispWord                        ; DAFC 20 8D C7
         jsr     LDAEA                           ; DAFF 20 EA DA
         ldy     #$08                            ; DB02 A0 08
@@ -3725,13 +3758,13 @@ LDB05:  ldy     #$0C                            ; DB05 A0 0C
         rts                                     ; DB0A 60
 
 ; ----------------------------------------------------------------------------
-LDB0B:  lda     Proc1+1                         ; DB0B AD E3 04
-        ldy     Proc1+2                         ; DB0E AC E4 04
+LDB0B:  lda     LoadByte+1                      ; DB0B AD E3 04
+        ldy     LoadByte+2                      ; DB0E AC E4 04
         jsr     DispWord                        ; DB11 20 8D C7
         jsr     DispSpace                       ; DB14 20 35 C7
         ldy     #$FF                            ; DB17 A0 FF
 LDB19:  iny                                     ; DB19 C8
-        lda     HRS3+1,y                        ; DB1A B9 52 00
+        lda     INSTR,y                         ; DB1A B9 52 00
         jsr     DispByte                        ; DB1D 20 92 C7
         jsr     LCC53                           ; DB20 20 53 CC
         dec     INDIC0+1                        ; DB23 C6 56
@@ -3749,8 +3782,8 @@ LDB37:  rts                                     ; DB37 60
 LDB38:  pha                                     ; DB38 48
         tya                                     ; DB39 98
         pha                                     ; DB3A 48
-        lda     Proc1+1                         ; DB3B AD E3 04
-        ldy     Proc1+2                         ; DB3E AC E4 04
+        lda     LoadByte+1                      ; DB3B AD E3 04
+        ldy     LoadByte+2                      ; DB3E AC E4 04
         jsr     DispWord                        ; DB41 20 8D C7
         jsr     DispSpace                       ; DB44 20 35 C7
         pla                                     ; DB47 68
@@ -3781,8 +3814,8 @@ LDB74:  jmp     LCFCB                           ; DB74 4C CB CF
 
 ; ----------------------------------------------------------------------------
 LDB77:  pha                                     ; DB77 48
-        lda     Proc1+1                         ; DB78 AD E3 04
-        ldy     Proc1+2                         ; DB7B AC E4 04
+        lda     LoadByte+1                      ; DB78 AD E3 04
+        ldy     LoadByte+2                      ; DB7B AC E4 04
         jsr     DispWord                        ; DB7E 20 8D C7
         jsr     DispSpace                       ; DB81 20 35 C7
         pla                                     ; DB84 68
@@ -3913,15 +3946,15 @@ LDC5C:  cmp     #"S"                            ; DC5C C9 53
         bmi     LDC43                           ; DC62 30 DF
 LDC64:  bit     HRSY                            ; DC64 24 47
         bmi     LDC70                           ; DC66 30 08
-        lda     VARAPL2+9                       ; DC68 A5 F4
-        sta     VARAPL2+11                      ; DC6A 85 F6
-        lda     VARAPL2+10                      ; DC6C A5 F5
-        sta     VARAPL2+12                      ; DC6E 85 F7
-LDC70:  jsr     LCF40                           ; DC70 20 40 CF
-        lda     VARAPL2+15                      ; DC73 A5 FA
-        sta     VARAPL2+17                      ; DC75 85 FC
-        lda     VARAPL2+16                      ; DC77 A5 FB
-        sta     VARAPL2+18                      ; DC79 85 FD
+        lda     GlobalTblStart                  ; DC68 A5 F4
+        sta     GlobalTblEnd                    ; DC6A 85 F6
+        lda     GlobalTblStart+1                ; DC6C A5 F5
+        sta     GlobalTblEnd+1                  ; DC6E 85 F7
+LDC70:  jsr     InitTXTPTR                      ; DC70 20 40 CF
+        lda     LocalTblStart                   ; DC73 A5 FA
+        sta     LocalTblEnd                     ; DC75 85 FC
+        lda     LocalTblStart+1                 ; DC77 A5 FB
+        sta     LocalTblEnd+1                   ; DC79 85 FD
         sta     VARAPL2+8                       ; DC7B 85 F3
 LDC7D:  jsr     LD7EE                           ; DC7D 20 EE D7
         beq     LDC97                           ; DC80 F0 15
@@ -3947,7 +3980,7 @@ LDCA4:  lda     Ptr3+1                          ; DCA4 AD F3 04
         sta     Ptr3                            ; DCAC 8D F2 04
         lda     Ptr1+1                          ; DCAF AD EF 04
         sta     Ptr3+1                          ; DCB2 8D F3 04
-LDCB5:  jsr     LCF40                           ; DCB5 20 40 CF
+LDCB5:  jsr     InitTXTPTR                      ; DCB5 20 40 CF
         jsr     LCC38                           ; DCB8 20 38 CC
 LDCBB:  jsr     LD7EE                           ; DCBB 20 EE D7
         bne     LDCC3                           ; DCBE D0 03
@@ -3958,7 +3991,7 @@ LDCC3:  jsr     LD7FA                           ; DCC3 20 FA D7
         bmi     LDCD6                           ; DCC6 30 0E
         cmp     #$27                            ; DCC8 C9 27
         beq     LDCBB                           ; DCCA F0 EF
-        jsr     SymLookup                       ; DCCC 20 77 CE
+        jsr     SymbolLookup                    ; DCCC 20 77 CE
         jsr     LD8D4                           ; DCCF 20 D4 D8
         beq     LDCBB                           ; DCD2 F0 E7
         ldy     #$00                            ; DCD4 A0 00
@@ -4029,8 +4062,8 @@ LDD44:  BRK_TELEMON XCRLF                             ; DD44 00 25
         ldy     SCEDEB+1                        ; DD4E A4 5D
         jsr     DispWord                        ; DD50 20 8D C7
         jsr     DispSpace                       ; DD53 20 35 C7
-        lda     VARAPL2+17                      ; DD56 A5 FC
-        ldy     VARAPL2+18                      ; DD58 A4 FD
+        lda     LocalTblEnd                     ; DD56 A5 FC
+        ldy     LocalTblEnd+1                   ; DD58 A4 FD
         jsr     DispWord                        ; DD5A 20 8D C7
         BRK_TELEMON XCRLF                             ; DD5D 00 25
         lda     #<Objet_str                     ; DD5F A9 4F
@@ -4041,10 +4074,10 @@ LDD44:  BRK_TELEMON XCRLF                             ; DD44 00 25
         jsr     DispWord                        ; DD6B 20 8D C7
         jsr     DispSpace                       ; DD6E 20 35 C7
         sec                                     ; DD71 38
-        lda     Proc1+1                         ; DD72 AD E3 04
+        lda     LoadByte+1                      ; DD72 AD E3 04
         sbc     Ptr1                            ; DD75 ED EE 04
         sta     VARAPL+1                        ; DD78 85 D1
-        lda     Proc1+2                         ; DD7A AD E4 04
+        lda     LoadByte+2                      ; DD7A AD E4 04
         sbc     Ptr1+1                          ; DD7D ED EF 04
         sta     VARAPL+2                        ; DD80 85 D2
         clc                                     ; DD82 18
@@ -4058,7 +4091,7 @@ LDD44:  BRK_TELEMON XCRLF                             ; DD44 00 25
         jsr     DispWord                        ; DD90 20 8D C7
         jsr     DispSpace                       ; DD93 20 35 C7
         BRK_TELEMON XCRLF                             ; DD96 00 25
-        jsr     LE013                           ; DD98 20 13 E0
+        jsr     DispSymbolsTblAddr              ; DD98 20 13 E0
         lda     #<Assemblage_str+1              ; DD9B A9 84
         ldy     #>Assemblage_str+1              ; DD9D A0 C6
         BRK_TELEMON XWSTR0                             ; DD9F 00 14
@@ -4077,7 +4110,7 @@ LDDA7:  jsr     GetKey                          ; DDA7 20 D1 C8
 ; ----------------------------------------------------------------------------
 LDDBA:  BRK_TELEMON XWR0                             ; DDBA 00 10
         BRK_TELEMON XCRLF                             ; DDBC 00 25
-        jsr     LCF40                           ; DDBE 20 40 CF
+        jsr     InitTXTPTR                      ; DDBE 20 40 CF
         jsr     LCC38                           ; DDC1 20 38 CC
         jsr     LCCC5                           ; DDC4 20 C5 CC
 LDDC7:  jsr     LD7EE                           ; DDC7 20 EE D7
@@ -4098,7 +4131,7 @@ LDDD8:  sta     INDIC2                          ; DDD8 85 57
         bcs     LDDF2                           ; DDE8 B0 08
         lda     #$00                            ; DDEA A9 00
         tax                                     ; DDEC AA
-        jsr     LCA79                           ; DDED 20 79 CA
+        jsr     EncodeMnemonic                  ; DDED 20 79 CA
         bcs     LDE29                           ; DDF0 B0 37
 LDDF2:  cmp     #$A1                            ; DDF2 C9 A1
         bcs     LDDFB                           ; DDF4 B0 05
@@ -4130,15 +4163,15 @@ LDE19:  cmp     #$BB                            ; DE19 C9 BB
 
 ; ----------------------------------------------------------------------------
 LDE26:  jsr     LD912                           ; DE26 20 12 D9
-LDE29:  sta     HRS3+1                          ; DE29 85 52
+LDE29:  sta     INSTR                           ; DE29 85 52
         stx     INDIC0+1                        ; DE2B 86 56
         lda     VARAPL+14                       ; DE2D A5 DE
-        sta     HRS4                            ; DE2F 85 53
+        sta     INSTR+1                         ; DE2F 85 53
         lda     VARAPL+15                       ; DE31 A5 DF
-        sta     HRS4+1                          ; DE33 85 54
+        sta     INSTR+2                         ; DE33 85 54
         ldy     #$FF                            ; DE35 A0 FF
 LDE37:  iny                                     ; DE37 C8
-        lda     HRS3+1,y                        ; DE38 B9 52 00
+        lda     INSTR,y                         ; DE38 B9 52 00
         jsr     LCCDB                           ; DE3B 20 DB CC
         jsr     LCCD2                           ; DE3E 20 D2 CC
         jsr     LCC53                           ; DE41 20 53 CC
@@ -4149,14 +4182,14 @@ LDE37:  iny                                     ; DE37 C8
 ; ----------------------------------------------------------------------------
 LDE4A:  bit     XLPRBI                          ; DE4A 24 48
         bpl     LDE51                           ; DE4C 10 03
-        jsr     LCF8D                           ; DE4E 20 8D CF
+        jsr     PrinterOn                       ; DE4E 20 8D CF
 LDE51:  bit     HRSX40                          ; DE51 24 49
         bmi     LDE58                           ; DE53 30 03
         jmp     LDEF4                           ; DE55 4C F4 DE
 
 ; ----------------------------------------------------------------------------
 LDE58:  jsr     LCB5A                           ; DE58 20 5A CB
-        jsr     LCF40                           ; DE5B 20 40 CF
+        jsr     InitTXTPTR                      ; DE5B 20 40 CF
         jsr     LCC38                           ; DE5E 20 38 CC
 LDE61:  jsr     LD7EE                           ; DE61 20 EE D7
         bne     LDE69                           ; DE64 D0 03
@@ -4187,7 +4220,7 @@ LDE83:  sta     INDIC2                          ; DE83 85 57
         bcs     LDE9D                           ; DE93 B0 08
         lda     #$00                            ; DE95 A9 00
         tax                                     ; DE97 AA
-        jsr     LCA79                           ; DE98 20 79 CA
+        jsr     EncodeMnemonic                  ; DE98 20 79 CA
         bcs     LDECE                           ; DE9B B0 31
 LDE9D:  cmp     #$A1                            ; DE9D C9 A1
         bcs     LDEA6                           ; DE9F B0 05
@@ -4212,12 +4245,12 @@ LDEC1:  cmp     #$BB                            ; DEC1 C9 BB
 
 ; ----------------------------------------------------------------------------
 LDECB:  jsr     LD912                           ; DECB 20 12 D9
-LDECE:  sta     HRS3+1                          ; DECE 85 52
+LDECE:  sta     INSTR                           ; DECE 85 52
         stx     INDIC0+1                        ; DED0 86 56
         lda     VARAPL+14                       ; DED2 A5 DE
-        sta     HRS4                            ; DED4 85 53
+        sta     INSTR+1                         ; DED4 85 53
         lda     VARAPL+15                       ; DED6 A5 DF
-        sta     HRS4+1                          ; DED8 85 54
+        sta     INSTR+2                         ; DED8 85 54
         jsr     LDB0B                           ; DEDA 20 0B DB
 LDEDD:  lda     VARAPL+10                       ; DEDD A5 DA
         sta     VARAPL+12                       ; DEDF 85 DC
@@ -4234,75 +4267,75 @@ LDEDD:  lda     VARAPL+10                       ; DEDD A5 DA
 LDEF4:  bit     HRSX6                           ; DEF4 24 4A
         bpl     LDF04                           ; DEF6 10 0C
         jsr     LCB5A                           ; DEF8 20 5A CB
-        jsr     DispLocSym                      ; DEFB 20 0A DF
+        jsr     DispLocalTbl                    ; DEFB 20 0A DF
         jsr     LCB5A                           ; DEFE 20 5A CB
-        jsr     DispGlobSym                     ; DF01 20 31 DF
+        jsr     DispGlobalTbl                   ; DF01 20 31 DF
 LDF04:  jsr     LCB6F                           ; DF04 20 6F CB
         jmp     LCFCB                           ; DF07 4C CB CF
 
 ; ----------------------------------------------------------------------------
 ; C65D 'Symboles :'/ C66B 'locaux'
-DispLocSym:
+DispLocalTbl:
         lda     #<Symboles_str                  ; DF0A A9 5D
         ldy     #>Symboles_str                  ; DF0C A0 C6
         BRK_TELEMON XWSTR0                             ; DF0E 00 14
         lda     #<Locaux_str                    ; DF10 A9 6B
         ldy     #>Locaux_str                    ; DF12 A0 C6
         BRK_TELEMON XWSTR0                             ; DF14 00 14
-        lda     VARAPL2+15                      ; DF16 A5 FA
+        lda     LocalTblStart                   ; DF16 A5 FA
         sta     Ptr1                            ; DF18 8D EE 04
         sta     VARAPL+12                       ; DF1B 85 DC
-        lda     VARAPL2+16                      ; DF1D A5 FB
+        lda     LocalTblStart+1                 ; DF1D A5 FB
         sta     Ptr1+1                          ; DF1F 8D EF 04
         sta     VARAPL+13                       ; DF22 85 DD
-        lda     VARAPL2+17                      ; DF24 A5 FC
+        lda     LocalTblEnd                     ; DF24 A5 FC
         sta     Ptr2                            ; DF26 8D F0 04
-        lda     VARAPL2+18                      ; DF29 A5 FD
+        lda     LocalTblEnd+1                   ; DF29 A5 FD
         sta     Ptr2+1                          ; DF2B 8D F1 04
-        jmp     DispSymTbl                      ; DF2E 4C 7C DF
+        jmp     DispSymbolsTbl                  ; DF2E 4C 7C DF
 
 ; ----------------------------------------------------------------------------
 ; C65D 'Symboles :'/ C672 'globaux'
-DispGlobSym:
+DispGlobalTbl:
         lda     #<Symboles_str                  ; DF31 A9 5D
         ldy     #>Symboles_str                  ; DF33 A0 C6
         BRK_TELEMON XWSTR0                             ; DF35 00 14
         lda     #<Globaux_str                   ; DF37 A9 72
         ldy     #>Globaux_str                   ; DF39 A0 C6
         BRK_TELEMON XWSTR0                             ; DF3B 00 14
-        lda     VARAPL2+9                       ; DF3D A5 F4
+        lda     GlobalTblStart                  ; DF3D A5 F4
         sta     Ptr1                            ; DF3F 8D EE 04
         sta     VARAPL+12                       ; DF42 85 DC
-        lda     VARAPL2+10                      ; DF44 A5 F5
+        lda     GlobalTblStart+1                ; DF44 A5 F5
         sta     Ptr1+1                          ; DF46 8D EF 04
         sta     VARAPL+13                       ; DF49 85 DD
-        lda     VARAPL2+11                      ; DF4B A5 F6
+        lda     GlobalTblEnd                    ; DF4B A5 F6
         sta     Ptr2                            ; DF4D 8D F0 04
-        lda     VARAPL2+12                      ; DF50 A5 F7
+        lda     GlobalTblEnd+1                  ; DF50 A5 F7
         sta     Ptr2+1                          ; DF52 8D F1 04
-        jmp     DispSymTbl                      ; DF55 4C 7C DF
+        jmp     DispSymbolsTbl                  ; DF55 4C 7C DF
 
 ; ----------------------------------------------------------------------------
 ; C65D 'Symboles :'/ C67A 'moniteur'
-DispMonSym:
+DispMonitorTbl:
         lda     #<Symboles_str                  ; DF58 A9 5D
         ldy     #>Symboles_str                  ; DF5A A0 C6
         BRK_TELEMON XWSTR0                             ; DF5C 00 14
         lda     #<Moniteur_str                  ; DF5E A9 7A
         ldy     #>Moniteur_str                  ; DF60 A0 C6
         BRK_TELEMON XWSTR0                             ; DF62 00 14
-        lda     #<SymbolTable                   ; DF64 A9 18
+        lda     #<MonitorTable                  ; DF64 A9 18
         sta     Ptr1                            ; DF66 8D EE 04
         sta     VARAPL+12                       ; DF69 85 DC
-        lda     #>SymbolTable                   ; DF6B A9 F0
+        lda     #>MonitorTable                  ; DF6B A9 F0
         sta     Ptr1+1                          ; DF6D 8D EF 04
         sta     VARAPL+13                       ; DF70 85 DD
-        lda     #$C8                            ; DF72 A9 C8
+        lda     #<MonitorTableEnd               ; DF72 A9 C8
         sta     Ptr2                            ; DF74 8D F0 04
-        lda     #$FF                            ; DF77 A9 FF
+        lda     #>MonitorTableEnd               ; DF77 A9 FF
         sta     Ptr2+1                          ; DF79 8D F1 04
-; VARAPL+12: Adr debut de la table, VARAPL+1: Finde la table
-DispSymTbl:
+; VARAPL+12: Adr debut de la table, VARAPL+1: Fin de la table
+DispSymbolsTbl:
         jsr     LCB5A                           ; DF7C 20 5A CB
         lda     #$03                            ; DF7F A9 03
         sta     VARAPL+5                        ; DF81 85 D5
@@ -4384,19 +4417,22 @@ LE00A:  jsr     DispSpace                       ; E00A 20 35 C7
         jmp     LDFCE                           ; E010 4C CE DF
 
 ; ----------------------------------------------------------------------------
-LE013:  lda     #<Symboles_str                  ; E013 A9 5D
+; Affiche les adresses de début, actuelle et fin de la table globale des
+; symboles
+DispSymbolsTblAddr:
+        lda     #<Symboles_str                  ; E013 A9 5D
         ldy     #>Symboles_str                  ; E015 A0 C6
         BRK_TELEMON XWSTR0                             ; E017 00 14
-        lda     VARAPL2+9                       ; E019 A5 F4
-        ldy     VARAPL2+10                      ; E01B A4 F5
+        lda     GlobalTblStart                  ; E019 A5 F4
+        ldy     GlobalTblStart+1                ; E01B A4 F5
         jsr     DispWord                        ; E01D 20 8D C7
         jsr     DispSpace                       ; E020 20 35 C7
-        lda     VARAPL2+11                      ; E023 A5 F6
-        ldy     VARAPL2+12                      ; E025 A4 F7
+        lda     GlobalTblEnd                    ; E023 A5 F6
+        ldy     GlobalTblEnd+1                  ; E025 A4 F7
         jsr     DispWord                        ; E027 20 8D C7
         jsr     DispSpace                       ; E02A 20 35 C7
-        lda     VARAPL2+13                      ; E02D A5 F8
-        ldy     VARAPL2+14                      ; E02F A4 F9
+        lda     GlobalTblLimit                  ; E02D A5 F8
+        ldy     GlobalTblLimit+1                ; E02F A4 F9
         jsr     DispWord                        ; E031 20 8D C7
         BRK_TELEMON XCRLF                             ; E034 00 25
         rts                                     ; E036 60
@@ -4405,17 +4441,17 @@ LE013:  lda     #<Symboles_str                  ; E013 A9 5D
 ; SYOLD (adrdeb, adrlim) : retrouve les symboles globaux (après sauvegarde et
 ; rechargement par exemple) et réinitialise les adresses de début et limite de
 ; la table (valeurs par défaut sinon: $3000, $3FFF)
-SYOLD:  ldx     VARAPL2+9                       ; E037 A6 F4
-        ldy     VARAPL2+10                      ; E039 A4 F5
+SYOLD:  ldx     GlobalTblStart                  ; E037 A6 F4
+        ldy     GlobalTblStart+1                ; E039 A4 F5
         stx     Ptr1                            ; E03B 8E EE 04
         sty     Ptr1+1                          ; E03E 8C EF 04
-        ldx     VARAPL2+13                      ; E041 A6 F8
-        ldy     VARAPL2+14                      ; E043 A4 F9
+        ldx     GlobalTblLimit                  ; E041 A6 F8
+        ldy     GlobalTblLimit+1                ; E043 A4 F9
         stx     Ptr2                            ; E045 8E F0 04
         sty     Ptr2+1                          ; E048 8C F1 04
         tax                                     ; E04B AA
         beq     LE053                           ; E04C F0 05
-        jsr     LE090                           ; E04E 20 90 E0
+        jsr     Eval2Words                      ; E04E 20 90 E0
         bne     LE08A                           ; E051 D0 37
 LE053:  jsr     LE0AB                           ; E053 20 AB E0
         jmp     LE07D                           ; E056 4C 7D E0
@@ -4429,7 +4465,7 @@ SYDEF:  ldx     #$00                            ; E059 A2 00
         stx     VARAPL+7                        ; E05B 86 D7
         tax                                     ; E05D AA
         beq     LE080                           ; E05E F0 20
-        jsr     LE090                           ; E060 20 90 E0
+        jsr     Eval2Words                      ; E060 20 90 E0
         beq     LE074                           ; E063 F0 0F
         jsr     EvalComma                       ; E065 20 AC D1
         cmp     #"C"                            ; E068 C9 43
@@ -4445,7 +4481,7 @@ LE074:  jsr     LE0AB                           ; E074 20 AB E0
 LE07D:  jsr     LE107                           ; E07D 20 07 E1
 LE080:  lda     #$7F                            ; E080 A9 7F
         BRK_TELEMON XWR0                             ; E082 00 10
-        jsr     LE013                           ; E084 20 13 E0
+        jsr     DispSymbolsTblAddr              ; E084 20 13 E0
         jmp     LCFC8                           ; E087 4C C8 CF
 
 ; ----------------------------------------------------------------------------
@@ -4455,12 +4491,14 @@ LE08A:  jmp     SyntaxErr5                      ; E08A 4C 3D D8
 LE08D:  jmp     OutOfRangeValErr1               ; E08D 4C 43 D8
 
 ; ----------------------------------------------------------------------------
-LE090:  tax                                     ; E090 AA
+; Evalue 2 mots séparés par une virgule
+Eval2Words:
+        tax                                     ; E090 AA
         beq     LE08A                           ; E091 F0 F7
         jsr     EvalWord                        ; E093 20 6A D2
         sta     Ptr1                            ; E096 8D EE 04
         sty     Ptr1+1                          ; E099 8C EF 04
-        cpx     #$2C                            ; E09C E0 2C
+        cpx     #","                            ; E09C E0 2C
         bne     LE08A                           ; E09E D0 EA
         jsr     LD267                           ; E0A0 20 67 D2
         sta     Ptr2                            ; E0A3 8D F0 04
@@ -4481,11 +4519,11 @@ LE0AB:  sec                                     ; E0AB 38
         ora     DECTRV                          ; E0BF 05 0A
         beq     LE08A                           ; E0C1 F0 C7
         sec                                     ; E0C3 38
-        lda     VARAPL2+9                       ; E0C4 A5 F4
+        lda     GlobalTblStart                  ; E0C4 A5 F4
         sta     DECDEB                          ; E0C6 85 04
         adc     DECTRV                          ; E0C8 65 0A
         sta     DECFIN                          ; E0CA 85 06
-        lda     VARAPL2+10                      ; E0CC A5 F5
+        lda     GlobalTblStart+1                ; E0CC A5 F5
         sta     DECDEB+1                        ; E0CE 85 05
         adc     DECTRV+1                        ; E0D0 65 0B
         sta     DECFIN+1                        ; E0D2 85 07
@@ -4500,26 +4538,26 @@ LE0AB:  sec                                     ; E0AB 38
         bne     LE08D                           ; E0E6 D0 A5
         ldy     Ptr2                            ; E0E8 AC F0 04
         bne     LE08D                           ; E0EB D0 A0
-LE0ED:  jsr     LocTblInit                      ; E0ED 20 73 CF
+LE0ED:  jsr     LocalTblInit                    ; E0ED 20 73 CF
         lda     Ptr2                            ; E0F0 AD F0 04
         ldy     Ptr2+1                          ; E0F3 AC F1 04
-        sta     VARAPL2+13                      ; E0F6 85 F8
-        sty     VARAPL2+14                      ; E0F8 84 F9
+        sta     GlobalTblLimit                  ; E0F6 85 F8
+        sty     GlobalTblLimit+1                ; E0F8 84 F9
         lda     DECCIB                          ; E0FA A5 08
         ldy     DECCIB+1                        ; E0FC A4 09
-        sta     VARAPL2+9                       ; E0FE 85 F4
-        sta     VARAPL2+11                      ; E100 85 F6
-        sty     VARAPL2+10                      ; E102 84 F5
-        sty     VARAPL2+12                      ; E104 84 F7
+        sta     GlobalTblStart                  ; E0FE 85 F4
+        sta     GlobalTblEnd                    ; E100 85 F6
+        sty     GlobalTblStart+1                ; E102 84 F5
+        sty     GlobalTblEnd+1                  ; E104 84 F7
         rts                                     ; E106 60
 
 ; ----------------------------------------------------------------------------
-LE107:  ldy     VARAPL2+13                      ; E107 A4 F8
-        ldx     VARAPL2+14                      ; E109 A6 F9
+LE107:  ldy     GlobalTblLimit                  ; E107 A4 F8
+        ldx     GlobalTblLimit+1                ; E109 A6 F9
         sty     DECFIN                          ; E10B 84 06
         stx     DECFIN+1                        ; E10D 86 07
-        ldy     VARAPL2+9                       ; E10F A4 F4
-        ldx     VARAPL2+10                      ; E111 A6 F5
+        ldy     GlobalTblStart                  ; E10F A4 F4
+        ldx     GlobalTblStart+1                ; E111 A6 F5
 LE113:  sty     DECDEB                          ; E113 84 04
         stx     DECDEB+1                        ; E115 86 05
         cpx     DECFIN+1                        ; E117 E4 07
@@ -4555,9 +4593,9 @@ LE14E:  ldy     #$00                            ; E14E A0 00
         tya                                     ; E150 98
         sta     (DECDEB),y                      ; E151 91 04
         lda     DECDEB                          ; E153 A5 04
-        sta     VARAPL2+11                      ; E155 85 F6
+        sta     GlobalTblEnd                    ; E155 85 F6
         lda     DECDEB+1                        ; E157 A5 05
-        sta     VARAPL2+12                      ; E159 85 F7
+        sta     GlobalTblEnd+1                  ; E159 85 F7
         rts                                     ; E15B 60
 
 ; ----------------------------------------------------------------------------
@@ -4605,20 +4643,20 @@ LE19A:  cmp     #"M"                            ; E19A C9 4D
         bne     LE179                           ; E1A4 D0 D3
 LE1A6:  bit     XLPRBI                          ; E1A6 24 48
         bpl     LE1AD                           ; E1A8 10 03
-        jsr     LCF8D                           ; E1AA 20 8D CF
+        jsr     PrinterOn                       ; E1AA 20 8D CF
 LE1AD:  bit     VARAPL+11                       ; E1AD 24 DB
         bpl     LE1B7                           ; E1AF 10 06
         jsr     LCB5A                           ; E1B1 20 5A CB
-        jsr     DispLocSym                      ; E1B4 20 0A DF
+        jsr     DispLocalTbl                    ; E1B4 20 0A DF
 LE1B7:  bit     VARAPL+11                       ; E1B7 24 DB
         bvc     LE1C1                           ; E1B9 50 06
         jsr     LCB5A                           ; E1BB 20 5A CB
-        jsr     DispGlobSym                     ; E1BE 20 31 DF
+        jsr     DispGlobalTbl                   ; E1BE 20 31 DF
 LE1C1:  lda     VARAPL+11                       ; E1C1 A5 DB
         and     #$01                            ; E1C3 29 01
         beq     LE1CD                           ; E1C5 F0 06
         jsr     LCB5A                           ; E1C7 20 5A CB
-        jsr     DispMonSym                      ; E1CA 20 58 DF
+        jsr     DispMonitorTbl                  ; E1CA 20 58 DF
 LE1CD:  jmp     LCFCB                           ; E1CD 4C CB CF
 
 ; ----------------------------------------------------------------------------
@@ -4751,7 +4789,7 @@ LE28C:  ldy     #$01                            ; E28C A0 01
         lda     VARAPL+15                       ; E294 A5 DF
         bne     LE263                           ; E296 D0 CB
         lda     VARAPL+14                       ; E298 A5 DE
-        sta     HRS1,y                          ; E29A 99 4D 00
+        sta     REGS,y                          ; E29A 99 4D 00
         jsr     CharGot                         ; E29D 20 E8 00
         sec                                     ; E2A0 38
         rts                                     ; E2A1 60
@@ -4789,7 +4827,7 @@ LE2BE:  iny                                     ; E2BE C8
         sta     SCEFIN                          ; E2D4 85 5E
         lda     TXTPTR+1                        ; E2D6 A5 EA
         sta     SCEFIN+1                        ; E2D8 85 5F
-        jsr     LocTblInit                      ; E2DA 20 73 CF
+        jsr     LocalTblInit                    ; E2DA 20 73 CF
         jmp     LCFCB                           ; E2DD 4C CB CF
 
 ; ----------------------------------------------------------------------------
@@ -4821,19 +4859,19 @@ LE307:  BRK_TELEMON XCRLF                             ; E307 00 25
         jsr     DispRegs                        ; E309 20 3A C7
         lda     BNKSAV                          ; E30C AD E1 04
         sta     BNKCIB                          ; E30F 8D 17 04
-        lda     HRS1+1                          ; E312 A5 4E
+        lda     REGS+1                          ; E312 A5 4E
         pha                                     ; E314 48
-        lda     HRS3                            ; E315 A5 51
-        ldy     HRS2+1                          ; E317 A4 50
-        ldx     HRS2                            ; E319 A6 4F
+        lda     REGS+4                          ; E315 A5 51
+        ldy     REGS+3                          ; E317 A4 50
+        ldx     REGS+2                          ; E319 A6 4F
         plp                                     ; E31B 28
         jsr     EXBNK                           ; E31C 20 0C 04
         php                                     ; E31F 08
-        sta     HRS3                            ; E320 85 51
-        sty     HRS2+1                          ; E322 84 50
-        stx     HRS2                            ; E324 86 4F
+        sta     REGS+4                          ; E320 85 51
+        sty     REGS+3                          ; E322 84 50
+        stx     REGS+2                          ; E324 86 4F
         pla                                     ; E326 68
-        sta     HRS1+1                          ; E327 85 4E
+        sta     REGS+1                          ; E327 85 4E
         BRK_TELEMON XCRLF                             ; E329 00 25
         jsr     DispRegs                        ; E32B 20 3A C7
         jsr     LC8DC                           ; E32E 20 DC C8
@@ -4848,8 +4886,8 @@ BYTES:  ldx     DEFBNK                          ; E334 AE E0 04
         tax                                     ; E33A AA
         beq     LE2E0                           ; E33B F0 A3
         jsr     EvalWord                        ; E33D 20 6A D2
-        sta     Proc1+9                         ; E340 8D EB 04
-        sty     Proc1+10                        ; E343 8C EC 04
+        sta     StoreByte2+1                    ; E340 8D EB 04
+        sty     StoreByte2+2                    ; E343 8C EC 04
         txa                                     ; E346 8A
         beq     LE2E0                           ; E347 F0 97
 LE349:  cmp     #","                            ; E349 C9 2C
@@ -4872,9 +4910,9 @@ SLIGNE: tax                                     ; E365 AA
         bne     LE37F                           ; E366 D0 17
         dex                                     ; E368 CA
         stx     XLPRBI                          ; E369 86 48
-        jsr     LCF8D                           ; E36B 20 8D CF
+        jsr     PrinterOn                       ; E36B 20 8D CF
 LE36E:  jsr     GetKey                          ; E36E 20 D1 C8
-        cmp     #$0D                            ; E371 C9 0D
+        cmp     #CR                             ; E371 C9 0D
         beq     LE378                           ; E373 F0 03
         jmp     LCFCB                           ; E375 4C CB CF
 
@@ -4888,7 +4926,7 @@ DPAGE:  tax                                     ; E37E AA
 LE37F:  bne     LE3FF                           ; E37F D0 7E
         dex                                     ; E381 CA
         stx     XLPRBI                          ; E382 86 48
-        jsr     LCF8D                           ; E384 20 8D CF
+        jsr     PrinterOn                       ; E384 20 8D CF
         jsr     LCB6F                           ; E387 20 6F CB
         jmp     LCFCB                           ; E38A 4C CB CF
 
@@ -5125,9 +5163,9 @@ MERGE:  jsr     LD182                           ; E50A 20 82 D1
 LE523:  jsr     LCB89                           ; E523 20 89 CB
         bcc     LE523                           ; E526 90 FB
 LE528:  lda     VARAPL+12                       ; E528 A5 DC
-        sta     INPIS                           ; E52A 8D 2D 05
+        sta     DESALO                          ; E52A 8D 2D 05
         lda     VARAPL+13                       ; E52D A5 DD
-        sta     INSEC                           ; E52F 8D 2E 05
+        sta     DESALO+1                        ; E52F 8D 2E 05
         lda     #$80                            ; E532 A9 80
         sta     VSALO1                          ; E534 8D 29 05
         lda     #<XLOAD                         ; E537 A9 62
@@ -5175,8 +5213,8 @@ ACCOFF: lda     #$05                            ; E560 A9 05
         jmp     LCFCB                           ; E56C 4C CB CF
 
 ; ----------------------------------------------------------------------------
-LE56F:  lda     Proc1+1                         ; E56F AD E3 04
-        ldy     Proc1+2                         ; E572 AC E4 04
+LE56F:  lda     LoadByte+1                      ; E56F AD E3 04
+        ldy     LoadByte+2                      ; E572 AC E4 04
         jsr     PutYAHexa                       ; E575 20 CD C7
         lda     #$00                            ; E578 A9 00
         sta     BUFTRV+5                        ; E57A 8D 05 01
@@ -5216,11 +5254,11 @@ LE5AD:  ora     MAJ_min_str,x                   ; E5AD 1D BE C6
 ; ----------------------------------------------------------------------------
 LE5C0:  stx     Ptr3                            ; E5C0 8E F2 04
         sta     Ptr3+1                          ; E5C3 8D F3 04
-        stx     Proc1+1                         ; E5C6 8E E3 04
-        sta     Proc1+2                         ; E5C9 8D E4 04
+        stx     LoadByte+1                      ; E5C6 8E E3 04
+        sta     LoadByte+2                      ; E5C9 8D E4 04
         lda     #$01                            ; E5CC A9 01
         ldy     #$00                            ; E5CE A0 00
-        jsr     LC879                           ; E5D0 20 79 C8
+        jsr     GotoAY                          ; E5D0 20 79 C8
 LE5D3:  jsr     LD2E8                           ; E5D3 20 E8 D2
         lda     SCRY                            ; E5D6 AD 24 02
         cmp     SCRFY                           ; E5D9 CD 34 02
@@ -5231,10 +5269,10 @@ LE5D3:  jsr     LD2E8                           ; E5D3 20 E8 D2
 ; ----------------------------------------------------------------------------
 LE5E3:  lda     Ptr3                            ; E5E3 AD F2 04
         sta     Ptr1                            ; E5E6 8D EE 04
-        sta     Proc1+1                         ; E5E9 8D E3 04
+        sta     LoadByte+1                      ; E5E9 8D E3 04
         lda     Ptr3+1                          ; E5EC AD F3 04
         sta     Ptr1+1                          ; E5EF 8D EF 04
-        sta     Proc1+2                         ; E5F2 8D E4 04
+        sta     LoadByte+2                      ; E5F2 8D E4 04
         lda     VARAPL+8                        ; E5F5 A5 D8
         sta     Ptr2                            ; E5F7 8D F0 04
         lda     VARAPL+9                        ; E5FA A5 D9
@@ -5246,7 +5284,7 @@ LE5E3:  lda     Ptr3                            ; E5E3 AD F2 04
         sta     HRSX6                           ; E607 85 4A
         ldy     #$06                            ; E609 A0 06
 LE60B:  lda     #$01                            ; E60B A9 01
-        jsr     LC879                           ; E60D 20 79 C8
+        jsr     GotoAY                          ; E60D 20 79 C8
 LE610:  lda     #$02                            ; E610 A9 02
         .byte   $2C                             ; E612 2C
 LE613:  lda     #$20                            ; E613 A9 20
@@ -5295,7 +5333,7 @@ LE65D:  sbc     #$1F                            ; E65D E9 1F
         adc     #$06                            ; E664 69 06
 LE666:  tay                                     ; E666 A8
         lda     SCRY                            ; E667 AD 24 02
-        jsr     LC879                           ; E66A 20 79 C8
+        jsr     GotoAY                          ; E66A 20 79 C8
         pla                                     ; E66D 68
         rts                                     ; E66E 60
 
@@ -5327,9 +5365,9 @@ LE69A:  jsr     LE6A0                           ; E69A 20 A0 E6
 
 ; ----------------------------------------------------------------------------
 LE6A0:  lda     Ptr3                            ; E6A0 AD F2 04
-        sta     Proc1+1                         ; E6A3 8D E3 04
+        sta     LoadByte+1                      ; E6A3 8D E3 04
         lda     Ptr3+1                          ; E6A6 AD F3 04
-        sta     Proc1+2                         ; E6A9 8D E4 04
+        sta     LoadByte+2                      ; E6A9 8D E4 04
         ldy     #$1F                            ; E6AC A0 1F
         bit     HRSX6                           ; E6AE 24 4A
         bmi     LE6B8                           ; E6B0 30 06
@@ -5337,7 +5375,7 @@ LE6A0:  lda     Ptr3                            ; E6A0 AD F2 04
         sta     HRSX6                           ; E6B4 85 4A
         ldy     #$06                            ; E6B6 A0 06
 LE6B8:  lda     SCRY                            ; E6B8 AD 24 02
-        jmp     LC879                           ; E6BB 4C 79 C8
+        jmp     GotoAY                          ; E6BB 4C 79 C8
 
 ; ----------------------------------------------------------------------------
 LE6BE:  lda     SCRX                            ; E6BE AD 20 02
@@ -5352,11 +5390,11 @@ LE6BE:  lda     SCRX                            ; E6BE AD 20 02
         bcc     LE6D7                           ; E6D2 90 03
         inc     Ptr3+1                          ; E6D4 EE F3 04
 LE6D7:  clc                                     ; E6D7 18
-        lda     Proc1+1                         ; E6D8 AD E3 04
+        lda     LoadByte+1                      ; E6D8 AD E3 04
         adc     #$08                            ; E6DB 69 08
-        sta     Proc1+1                         ; E6DD 8D E3 04
+        sta     LoadByte+1                      ; E6DD 8D E3 04
         bcc     LE6E5                           ; E6E0 90 03
-        inc     Proc1+2                         ; E6E2 EE E4 04
+        inc     LoadByte+2                      ; E6E2 EE E4 04
 LE6E5:  jsr     LE613                           ; E6E5 20 13 E6
         lda     #$0A                            ; E6E8 A9 0A
         BRK_TELEMON XWR0                             ; E6EA 00 10
@@ -5381,7 +5419,7 @@ LE6F4:  jsr     LE7C2                           ; E6F4 20 C2 E7
 LE711:  pla                                     ; E711 68
         tay                                     ; E712 A8
         lda     SCRY                            ; E713 AD 24 02
-        jmp     LC879                           ; E716 4C 79 C8
+        jmp     GotoAY                          ; E716 4C 79 C8
 
 ; ----------------------------------------------------------------------------
 LE719:  lda     #BS                             ; E719 A9 08
@@ -5413,9 +5451,9 @@ LE743:  jsr     LE749                           ; E743 20 49 E7
 LE749:  clc                                     ; E749 18
         lda     Ptr3                            ; E74A AD F2 04
         adc     #$07                            ; E74D 69 07
-        sta     Proc1+1                         ; E74F 8D E3 04
+        sta     LoadByte+1                      ; E74F 8D E3 04
         bcc     LE757                           ; E752 90 03
-        inc     Proc1+2                         ; E754 EE E4 04
+        inc     LoadByte+2                      ; E754 EE E4 04
 LE757:  ldy     #$26                            ; E757 A0 26
         bit     HRSX6                           ; E759 24 4A
         bmi     LE763                           ; E75B 30 06
@@ -5423,7 +5461,7 @@ LE757:  ldy     #$26                            ; E757 A0 26
         sta     HRSX6                           ; E75F 85 4A
         ldy     #$1C                            ; E761 A0 1C
 LE763:  lda     SCRY                            ; E763 AD 24 02
-        jmp     LC879                           ; E766 4C 79 C8
+        jmp     GotoAY                          ; E766 4C 79 C8
 
 ; ----------------------------------------------------------------------------
 LE769:  lda     SCRX                            ; E769 AD 20 02
@@ -5438,11 +5476,11 @@ LE769:  lda     SCRX                            ; E769 AD 20 02
         bcs     LE782                           ; E77D B0 03
         dec     Ptr3+1                          ; E77F CE F3 04
 LE782:  sec                                     ; E782 38
-        lda     Proc1+1                         ; E783 AD E3 04
+        lda     LoadByte+1                      ; E783 AD E3 04
         sbc     #$08                            ; E786 E9 08
-        sta     Proc1+1                         ; E788 8D E3 04
+        sta     LoadByte+1                      ; E788 8D E3 04
         bcs     LE790                           ; E78B B0 03
-        dec     Proc1+2                         ; E78D CE E4 04
+        dec     LoadByte+2                      ; E78D CE E4 04
 LE790:  jsr     LE613                           ; E790 20 13 E6
         lda     #VT                             ; E793 A9 0B
         BRK_TELEMON XWR0                             ; E795 00 10
@@ -5468,19 +5506,19 @@ LE7A2:  jsr     LE7C2                           ; E7A2 20 C2 E7
 LE7BF:  jmp     LE711                           ; E7BF 4C 11 E7
 
 ; ----------------------------------------------------------------------------
-LE7C2:  lda     Proc1+1                         ; E7C2 AD E3 04
+LE7C2:  lda     LoadByte+1                      ; E7C2 AD E3 04
         pha                                     ; E7C5 48
-        lda     Proc1+2                         ; E7C6 AD E4 04
+        lda     LoadByte+2                      ; E7C6 AD E4 04
         pha                                     ; E7C9 48
         lda     Ptr3                            ; E7CA AD F2 04
         ldy     Ptr3+1                          ; E7CD AC F3 04
-        sta     Proc1+1                         ; E7D0 8D E3 04
-        sty     Proc1+2                         ; E7D3 8C E4 04
+        sta     LoadByte+1                      ; E7D0 8D E3 04
+        sty     LoadByte+2                      ; E7D3 8C E4 04
         jsr     LD2E8                           ; E7D6 20 E8 D2
         pla                                     ; E7D9 68
-        sta     Proc1+2                         ; E7DA 8D E4 04
+        sta     LoadByte+2                      ; E7DA 8D E4 04
         pla                                     ; E7DD 68
-        sta     Proc1+1                         ; E7DE 8D E3 04
+        sta     LoadByte+1                      ; E7DE 8D E3 04
         jsr     LE610                           ; E7E1 20 10 E6
         rts                                     ; E7E4 60
 
@@ -5690,7 +5728,7 @@ LE95A:  cmp     #CTRL_B                            ; E95A C9 02
         bne     LE991                           ; E95C D0 33
         ldy     #$17                            ; E95E A0 17
         lda     #$00                            ; E960 A9 00
-        jsr     LC879                           ; E962 20 79 C8
+        jsr     GotoAY                          ; E962 20 79 C8
 LE965:  jsr     GetKey                          ; E965 20 D1 C8
         cmp     #ESC                            ; E968 C9 1B
         beq     LE991                           ; E96A F0 25
@@ -5723,7 +5761,7 @@ LE991:  cmp     #CTRL_C                            ; E991 C9 03
 LE99C:  jsr     LC8DC                           ; E99C 20 DC C8
         lda     SCRFY                           ; E99F AD 34 02
         ldy     #$00                            ; E9A2 A0 00
-        jsr     LC879                           ; E9A4 20 79 C8
+        jsr     GotoAY                          ; E9A4 20 79 C8
         jmp     LCFC8                           ; E9A7 4C C8 CF
 
 ; ----------------------------------------------------------------------------
@@ -5766,37 +5804,39 @@ Scr0InitTbl:
         .byte   $1D                             ; E9E9 1D
         .byte   $01                             ; E9EA 01
         .byte   $17                             ; E9EB 17
-        .byte   $80                             ; E9EC 80
-        .byte   $BB                             ; E9ED BB
+        .word   $BB80                           ; E9EC 80 BB
+; ----------------------------------------------------------------------------
 ; Table d'initialisation écran 1
 Scr1InitTbl:
         .byte   $07                             ; E9EE 07
         .byte   $1D                             ; E9EF 1D
         .byte   $19                             ; E9F0 19
         .byte   $1B                             ; E9F1 1B
-        .byte   $80                             ; E9F2 80
-        .byte   $BB                             ; E9F3 BB
+        .word   $BB80                           ; E9F2 80 BB
+; ----------------------------------------------------------------------------
 ; Table d'initialisation écran 2
 Scr2InitTbl:
         .byte   $1F                             ; E9F4 1F
         .byte   $27                             ; E9F5 27
         .byte   $01                             ; E9F6 01
         .byte   $1B                             ; E9F7 1B
-        .byte   $80                             ; E9F8 80
-        .byte   $BB                             ; E9F9 BB
+        .word   $BB80                           ; E9F8 80 BB
+; ----------------------------------------------------------------------------
 ; Table d'initialisation écran 0 bis
 Scr0bInitTbl:
         .byte   $00                             ; E9FA 00
         .byte   $27                             ; E9FB 27
         .byte   $01                             ; E9FC 01
         .byte   $1B                             ; E9FD 1B
-        .byte   $80                             ; E9FE 80
-        .byte   $BB                             ; E9FF BB
-; Trouver un meilleur nom
+        .word   $BB80                           ; E9FE 80 BB
+; ----------------------------------------------------------------------------
+; Inutilisé?
 Table1: .byte   $07                             ; EA00 07
         .byte   $04                             ; EA01 04
         .byte   $02                             ; EA02 02
-LEA03:  ldy     #$05                            ; EA03 A0 05
+; Initialise la routine de trace pour les instructions Bxx
+InitProc2:
+        ldy     #$05                            ; EA03 A0 05
 LEA05:  lda     LEA0F,y                         ; EA05 B9 0F EA
         sta     Proc2,y                         ; EA08 99 F4 04
         dey                                     ; EA0B 88
@@ -5815,7 +5855,7 @@ LEA13:  sec                                     ; EA13 38
 ; ----------------------------------------------------------------------------
 ; TRACE adrdeb (,S adrstop) (,E) (,H) (,N) (,A val) (...) (,B val) : exécute
 ; une routine en mode trace
-TRACE:  jsr     LEA03                           ; EA15 20 03 EA
+TRACE:  jsr     InitProc2                       ; EA15 20 03 EA
         ldx     #$40                            ; EA18 A2 40
         stx     Ptr3                            ; EA1A 8E F2 04
         stx     XLPRBI                          ; EA1D 86 48
@@ -5823,13 +5863,13 @@ TRACE:  jsr     LEA03                           ; EA15 20 03 EA
         stx     BNKSAV                          ; EA22 8E E1 04
         ldx     #$FE                            ; EA25 A2 FE
         txs                                     ; EA27 9A
-        stx     HRS1                            ; EA28 86 4D
+        stx     REGS                            ; EA28 86 4D
         inx                                     ; EA2A E8
         stx     Ptr2                            ; EA2B 8E F0 04
         stx     Ptr2+1                          ; EA2E 8E F1 04
         jsr     EvalWord                        ; EA31 20 6A D2
-        sta     Proc1+1                         ; EA34 8D E3 04
-        sty     Proc1+2                         ; EA37 8C E4 04
+        sta     LoadByte+1                      ; EA34 8D E3 04
+        sty     LoadByte+2                      ; EA37 8C E4 04
 LEA3A:  txa                                     ; EA3A 8A
 LEA3B:  tax                                     ; EA3B AA
         beq     LEA7C                           ; EA3C F0 3E
@@ -5879,7 +5919,7 @@ LEA8E:  bit     Ptr3                            ; EA8E 2C F2 04
         bpl     LEA9D                           ; EA98 10 03
         jsr     LE9AA                           ; EA9A 20 AA E9
 LEA9D:  jsr     LECD7                           ; EA9D 20 D7 EC
-LEAA0:  jsr     LC8B4                           ; EAA0 20 B4 C8
+LEAA0:  jsr     CheckBreak                      ; EAA0 20 B4 C8
         bcs     LEA8E                           ; EAA3 B0 E9
         bit     Ptr3                            ; EAA5 2C F2 04
         bpl     LEABE                           ; EAA8 10 14
@@ -5889,7 +5929,7 @@ LEAA0:  jsr     LC8B4                           ; EAA0 20 B4 C8
 LEAB2:  dex                                     ; EAB2 CA
         bmi     LEAE0                           ; EAB3 30 2B
         jsr     LCC53                           ; EAB5 20 53 CC
-        sta     HRS4,y                          ; EAB8 99 53 00
+        sta     INSTR+1,y                       ; EAB8 99 53 00
         iny                                     ; EABB C8
         bne     LEAB2                           ; EABC D0 F4
 LEABE:  jsr     LECF3                           ; EABE 20 F3 EC
@@ -5899,54 +5939,54 @@ LEABE:  jsr     LECF3                           ; EABE 20 F3 EC
 LEAC7:  jsr     GetKey                          ; EAC7 20 D1 C8
         cmp     #" "                            ; EACA C9 20
         beq     LEAE0                           ; EACC F0 12
-        cmp     #$1B                            ; EACE C9 1B
+        cmp     #ESC                            ; EACE C9 1B
         beq     LEB3A                           ; EAD0 F0 68
-        cmp     #$03                            ; EAD2 C9 03
+        cmp     #CTRL_C                            ; EAD2 C9 03
         beq     LEB3A                           ; EAD4 F0 64
         cmp     #CR                             ; EAD6 C9 0D
         bne     LEAC7                           ; EAD8 D0 ED
-        lda     HRS3+1                          ; EADA A5 52
-        cmp     #" "                            ; EADC C9 20
+        lda     INSTR                           ; EADA A5 52
+        cmp     #$20                            ; EADC C9 20
         beq     LEAF6                           ; EADE F0 16
-LEAE0:  lda     HRS3+1                          ; EAE0 A5 52
+LEAE0:  lda     INSTR                           ; EAE0 A5 52
         beq     LEAF6                           ; EAE2 F0 12
         lda     INDIC0                          ; EAE4 A5 55
         cmp     #$C1                            ; EAE6 C9 C1
         bne     LEAF1                           ; EAE8 D0 07
-        jsr     LEB5F                           ; EAEA 20 5F EB
+        jsr     TraceBranch                     ; EAEA 20 5F EB
         bcs     LEA89                           ; EAED B0 9A
         bcc     LEB34                           ; EAEF 90 43
 LEAF1:  jsr     TraceJMP                        ; EAF1 20 79 EB
         bcs     LEA89                           ; EAF4 B0 93
 LEAF6:  lda     #$EA                            ; EAF6 A9 EA
-        sta     Proc1+9                         ; EAF8 8D EB 04
-        sta     Proc1+10                        ; EAFB 8D EC 04
+        sta     StoreByte2+1                    ; EAF8 8D EB 04
+        sta     StoreByte2+2                    ; EAFB 8D EC 04
         ldx     INDIC0+1                        ; EAFE A6 56
-LEB00:  lda     HRS3+1,x                        ; EB00 B5 52
-        sta     Proc1+8,x                       ; EB02 9D EA 04
+LEB00:  lda     INSTR,x                         ; EB00 B5 52
+        sta     StoreByte2,x                    ; EB02 9D EA 04
         dex                                     ; EB05 CA
         bpl     LEB00                           ; EB06 10 F8
         lda     BNKSAV                          ; EB08 AD E1 04
         sta     BNKCIB                          ; EB0B 8D 17 04
-        lda     #$EA                            ; EB0E A9 EA
+        lda     #<StoreByte2                    ; EB0E A9 EA
         sta     VEXBNK+1                        ; EB10 8D 15 04
-        lda     #$04                            ; EB13 A9 04
+        lda     #>StoreByte2                    ; EB13 A9 04
         sta     VEXBNK+2                        ; EB15 8D 16 04
-        lda     HRS1+1                          ; EB18 A5 4E
+        lda     REGS+1                          ; EB18 A5 4E
         pha                                     ; EB1A 48
-        lda     HRS3                            ; EB1B A5 51
-        ldy     HRS2+1                          ; EB1D A4 50
-        ldx     HRS2                            ; EB1F A6 4F
+        lda     REGS+4                          ; EB1B A5 51
+        ldy     REGS+3                          ; EB1D A4 50
+        ldx     REGS+2                          ; EB1F A6 4F
         plp                                     ; EB21 28
         jsr     EXBNK                           ; EB22 20 0C 04
         php                                     ; EB25 08
-        sta     HRS3                            ; EB26 85 51
-        sty     HRS2+1                          ; EB28 84 50
-        stx     HRS2                            ; EB2A 86 4F
+        sta     REGS+4                          ; EB26 85 51
+        sty     REGS+3                          ; EB28 84 50
+        stx     REGS+2                          ; EB2A 86 4F
         pla                                     ; EB2C 68
-        sta     HRS1+1                          ; EB2D 85 4E
+        sta     REGS+1                          ; EB2D 85 4E
         tsx                                     ; EB2F BA
-        stx     HRS1                            ; EB30 86 4D
+        stx     REGS                            ; EB30 86 4D
         cli                                     ; EB32 58
         cld                                     ; EB33 D8
 LEB34:  jsr     LCC53                           ; EB34 20 53 CC
@@ -5957,7 +5997,7 @@ LEB3A:  bit     Ptr3                            ; EB3A 2C F2 04
         bpl     LEB44                           ; EB3D 10 05
         BRK_TELEMON XCRLF                             ; EB3F 00 25
         jsr     DispRegs                        ; EB41 20 3A C7
-LEB44:  jsr     LCF36                           ; EB44 20 36 CF
+LEB44:  jsr     InitStack                       ; EB44 20 36 CF
         cli                                     ; EB47 58
         cld                                     ; EB48 D8
         lda     Ptr3                            ; EB49 AD F2 04
@@ -5971,9 +6011,12 @@ LEB51:  lda     #<Scr0bInitTbl                 ; EB51 A9 FA
         jmp     Warm_start                      ; EB5C 4C B4 D0
 
 ; ----------------------------------------------------------------------------
-LEB5F:  lda     HRS3+1                          ; EB5F A5 52
+; Trace une instruction Bxx. Met à jour le PC virtuel. Sortie de Proc2: C=1 ->
+;test vrai.
+TraceBranch:
+        lda     INSTR                           ; EB5F A5 52
         sta     Proc2                           ; EB61 8D F4 04
-        lda     HRS1+1                          ; EB64 A5 4E
+        lda     REGS+1                          ; EB64 A5 4E
         pha                                     ; EB66 48
         plp                                     ; EB67 28
         jsr     Proc2                           ; EB68 20 F4 04
@@ -5982,8 +6025,8 @@ LEB5F:  lda     HRS3+1                          ; EB5F A5 52
 
 ; ----------------------------------------------------------------------------
 LEB6E:  jsr     LD3AE                           ; EB6E 20 AE D3
-        stx     Proc1+1                         ; EB71 8E E3 04
-        sty     Proc1+2                         ; EB74 8C E4 04
+        stx     LoadByte+1                      ; EB71 8E E3 04
+        sty     LoadByte+2                      ; EB74 8C E4 04
         sec                                     ; EB77 38
         rts                                     ; EB78 60
 
@@ -5994,11 +6037,11 @@ TraceJMP:
         sta     Ptr1                            ; EB7A 8D EE 04
         pla                                     ; EB7D 68
         sta     Ptr1+1                          ; EB7E 8D EF 04
-        lda     HRS3+1                          ; EB81 A5 52
+        lda     INSTR                           ; EB81 A5 52
         cmp     #$4C                            ; EB83 C9 4C
         bne     TraceJMPind                     ; EB85 D0 07
-        lda     HRS4                            ; EB87 A5 53
-        ldy     HRS4+1                          ; EB89 A4 54
+        lda     INSTR+1                         ; EB87 A5 53
+        ldy     INSTR+2                         ; EB89 A4 54
         jmp     LEBBB                           ; EB8B 4C BB EB
 
 ; ----------------------------------------------------------------------------
@@ -6006,10 +6049,10 @@ TraceJMP:
 TraceJMPind:
         cmp     #$6C                            ; EB8E C9 6C
         bne     TraceJSR                        ; EB90 D0 16
-        lda     HRS4                            ; EB92 A5 53
-        ldy     HRS4+1                          ; EB94 A4 54
-        sta     Proc1+1                         ; EB96 8D E3 04
-        sty     Proc1+2                         ; EB99 8C E4 04
+        lda     INSTR+1                         ; EB92 A5 53
+        ldy     INSTR+2                         ; EB94 A4 54
+        sta     LoadByte+1                      ; EB96 8D E3 04
+        sty     LoadByte+2                      ; EB99 8C E4 04
         jsr     LCC5B                           ; EB9C 20 5B CC
         tax                                     ; EB9F AA
         jsr     LCC53                           ; EBA0 20 53 CC
@@ -6022,16 +6065,16 @@ TraceJMPind:
 TraceJSR:
         cmp     #$20                            ; EBA8 C9 20
         bne     TraceRTI                        ; EBAA D0 18
-        lda     Proc1+2                         ; EBAC AD E4 04
+        lda     LoadByte+2                      ; EBAC AD E4 04
         pha                                     ; EBAF 48
-        lda     Proc1+1                         ; EBB0 AD E3 04
+        lda     LoadByte+1                      ; EBB0 AD E3 04
         pha                                     ; EBB3 48
-        lda     HRS4                            ; EBB4 A5 53
-        ldy     HRS4+1                          ; EBB6 A4 54
+        lda     INSTR+1                         ; EBB4 A5 53
+        ldy     INSTR+2                         ; EBB6 A4 54
 LEBB8:  tsx                                     ; EBB8 BA
-        stx     HRS1                            ; EBB9 86 4D
-LEBBB:  sta     Proc1+1                         ; EBBB 8D E3 04
-        sty     Proc1+2                         ; EBBE 8C E4 04
+        stx     REGS                            ; EBB9 86 4D
+LEBBB:  sta     LoadByte+1                      ; EBBB 8D E3 04
+        sty     LoadByte+2                      ; EBBE 8C E4 04
         jmp     LEC2C                           ; EBC1 4C 2C EC
 
 ; ----------------------------------------------------------------------------
@@ -6043,7 +6086,7 @@ TraceRTI:
         cpx     #$FC                            ; EBC9 E0 FC
         bcs     LEBE1                           ; EBCB B0 14
         pla                                     ; EBCD 68
-        sta     HRS1+1                          ; EBCE 85 4E
+        sta     REGS+1                          ; EBCE 85 4E
         pla                                     ; EBD0 68
         tax                                     ; EBD1 AA
         pla                                     ; EBD2 68
@@ -6064,9 +6107,9 @@ LEBE1:  cpx     #$FE                            ; EBE1 E0 FE
 LEBE5:  ldx     #$16                            ; EBE5 A2 16
         bne     LEC3E                           ; EBE7 D0 55
 LEBE9:  pla                                     ; EBE9 68
-        sta     Proc1+1                         ; EBEA 8D E3 04
+        sta     LoadByte+1                      ; EBEA 8D E3 04
         pla                                     ; EBED 68
-        sta     Proc1+2                         ; EBEE 8D E4 04
+        sta     LoadByte+2                      ; EBEE 8D E4 04
         jmp     LEC26                           ; EBF1 4C 26 EC
 
 ; ----------------------------------------------------------------------------
@@ -6079,9 +6122,9 @@ TracePLA:
         bcs     LEBE5                           ; EBFB B0 E8
         pla                                     ; EBFD 68
         php                                     ; EBFE 08
-        sta     HRS3                            ; EBFF 85 51
+        sta     REGS+4                          ; EBFF 85 51
         pla                                     ; EC01 68
-        sta     HRS1+1                          ; EC02 85 4E
+        sta     REGS+1                          ; EC02 85 4E
         jmp     LEC26                           ; EC04 4C 26 EC
 
 ; ----------------------------------------------------------------------------
@@ -6092,7 +6135,7 @@ TracePLP:
         cpx     #$FE                            ; EC0B E0 FE
         bcs     LEBE5                           ; EC0D B0 D6
         pla                                     ; EC0F 68
-        sta     HRS1+1                          ; EC10 85 4E
+        sta     REGS+1                          ; EC10 85 4E
         jmp     LEC26                           ; EC12 4C 26 EC
 
 ; ----------------------------------------------------------------------------
@@ -6100,7 +6143,7 @@ TracePLP:
 TracePHA:
         cmp     #$48                            ; EC15 C9 48
         bne     TracePHP                        ; EC17 D0 06
-        lda     HRS3                            ; EC19 A5 51
+        lda     REGS+4                          ; EC19 A5 51
         pha                                     ; EC1B 48
         jmp     LEC26                           ; EC1C 4C 26 EC
 
@@ -6109,10 +6152,10 @@ TracePHA:
 TracePHP:
         cmp     #$08                            ; EC1F C9 08
         bne     LEC36                           ; EC21 D0 13
-        lda     HRS1+1                          ; EC23 A5 4E
+        lda     REGS+1                          ; EC23 A5 4E
         pha                                     ; EC25 48
 LEC26:  tsx                                     ; EC26 BA
-        stx     HRS1                            ; EC27 86 4D
+        stx     REGS                            ; EC27 86 4D
         jsr     LCC53                           ; EC29 20 53 CC
 LEC2C:  sec                                     ; EC2C 38
 LEC2D:  lda     Ptr1+1                          ; EC2D AD EF 04
@@ -6132,7 +6175,7 @@ LEC3E:  jsr     DispErrorX                      ; EC3E 20 1B C8
 LEC46:  jsr     LCC45                           ; EC46 20 45 CC
         dec     INDIC0+1                        ; EC49 C6 56
         bpl     LEC46                           ; EC4B 10 F9
-        jsr     LD3CB                           ; EC4D 20 CB D3
+        jsr     DesasInstr                      ; EC4D 20 CB D3
 LEC50:  jmp     LEB3A                           ; EC50 4C 3A EB
 
 ; ----------------------------------------------------------------------------
@@ -6146,7 +6189,7 @@ LEC53:  lda     #$0C                            ; EC53 A9 0C
         lda     #$0D                            ; EC61 A9 0D
         BRK_TELEMON XWR1                             ; EC63 00 11
         ldy     #$03                            ; EC65 A0 03
-LEC67:  lda     HRS1+1,y                        ; EC67 B9 4E 00
+LEC67:  lda     REGS+1,y                        ; EC67 B9 4E 00
         jsr     PutHexa                         ; EC6A 20 D9 C7
         jsr     LEC80                           ; EC6D 20 80 EC
         lda     #$20                            ; EC70 A9 20
@@ -6155,7 +6198,7 @@ LEC67:  lda     HRS1+1,y                        ; EC67 B9 4E 00
         bpl     LEC67                           ; EC75 10 F0
         lda     #$20                            ; EC77 A9 20
         BRK_TELEMON XWR1                             ; EC79 00 11
-        lda     HRS1+1                          ; EC7B A5 4E
+        lda     REGS+1                          ; EC7B A5 4E
         jsr     PutBitStr                       ; EC7D 20 FE C7
 LEC80:  pha                                     ; EC80 48
         tya                                     ; EC81 98
@@ -6173,27 +6216,29 @@ LEC80:  pha                                     ; EC80 48
         rts                                     ; EC90 60
 
 ; ----------------------------------------------------------------------------
-LEC91:  lda     #$0C                            ; EC91 A9 0C
+; Affiche le contenu de la pile de $1FF à max(S,$1E3)
+Disp_Stack:
+        lda     #FF                             ; EC91 A9 0C
         BRK_TELEMON XWR2                             ; EC93 00 12
         ldy     #$FE                            ; EC95 A0 FE
-LEC97:  lda     #$0A                            ; EC97 A9 0A
+LEC97:  lda     #LF                             ; EC97 A9 0A
         BRK_TELEMON XWR2                             ; EC99 00 12
-        lda     #$0D                            ; EC9B A9 0D
+        lda     #CR                             ; EC9B A9 0D
         BRK_TELEMON XWR2                             ; EC9D 00 12
         tya                                     ; EC9F 98
         pha                                     ; ECA0 48
         ldy     #$01                            ; ECA1 A0 01
         jsr     PutYAHexa                       ; ECA3 20 CD C7
-        jsr     LECC6                           ; ECA6 20 C6 EC
+        jsr     Disp_BUFTRV                     ; ECA6 20 C6 EC
         pla                                     ; ECA9 68
         tay                                     ; ECAA A8
-        cmp     HRS1                            ; ECAB C5 4D
+        cmp     REGS                            ; ECAB C5 4D
         beq     LECC1                           ; ECAD F0 12
-        lda     #$20                            ; ECAF A9 20
+        lda     #" "                            ; ECAF A9 20
         BRK_TELEMON XWR2                             ; ECB1 00 12
         lda     BUFTRV,y                        ; ECB3 B9 00 01
         jsr     PutHexa                         ; ECB6 20 D9 C7
-        jsr     LECC6                           ; ECB9 20 C6 EC
+        jsr     Disp_BUFTRV                     ; ECB9 20 C6 EC
         dey                                     ; ECBC 88
         cpy     #$E4                            ; ECBD C0 E4
         bne     LEC97                           ; ECBF D0 D6
@@ -6202,7 +6247,9 @@ LECC1:  lda     #$7F                            ; ECC1 A9 7F
         rts                                     ; ECC5 60
 
 ; ----------------------------------------------------------------------------
-LECC6:  pha                                     ; ECC6 48
+; Affiche le contenu du buffer BUFTRV sur le canal 2
+Disp_BUFTRV:
+        pha                                     ; ECC6 48
         tya                                     ; ECC7 98
         pha                                     ; ECC8 48
         txa                                     ; ECC9 8A
@@ -6238,9 +6285,9 @@ LECF3:  bit     Ptr3                            ; ECF3 2C F2 04
         bit     XLPRBI                          ; ECF8 24 48
         bmi     LED02                           ; ECFA 30 06
         jsr     LEC53                           ; ECFC 20 53 EC
-        jsr     LEC91                           ; ECFF 20 91 EC
+        jsr     Disp_Stack                      ; ECFF 20 91 EC
 LED02:  BRK_TELEMON XCRLF                             ; ED02 00 25
-        jsr     LD3CB                           ; ED04 20 CB D3
+        jsr     DesasInstr                      ; ED04 20 CB D3
 LED07:  rts                                     ; ED07 60
 
 ; ----------------------------------------------------------------------------
@@ -6258,10 +6305,10 @@ LED11:  jmp     SyntaxErr5                      ; ED11 4C 3D D8
 MINAS:  tax                                     ; ED14 AA
         beq     LED11                           ; ED15 F0 FA
         jsr     EvalWord                        ; ED17 20 6A D2
-        sta     Proc1+1                         ; ED1A 8D E3 04
-        sta     Proc1+9                         ; ED1D 8D EB 04
-        sty     Proc1+2                         ; ED20 8C E4 04
-        sty     Proc1+10                        ; ED23 8C EC 04
+        sta     LoadByte+1                      ; ED1A 8D E3 04
+        sta     StoreByte2+1                    ; ED1D 8D EB 04
+        sty     LoadByte+2                      ; ED20 8C E4 04
+        sty     StoreByte2+2                    ; ED23 8C EC 04
         txa                                     ; ED26 8A
         bne     LED11                           ; ED27 D0 E8
         jsr     LED08                           ; ED29 20 08 ED
@@ -6309,7 +6356,7 @@ LED79:  lda     (TXTPTR),y                      ; ED79 B1 E9
         bcs     LED9C                           ; ED83 B0 17
         lda     #$00                            ; ED85 A9 00
         tax                                     ; ED87 AA
-        jsr     LCA79                           ; ED88 20 79 CA
+        jsr     EncodeMnemonic                  ; ED88 20 79 CA
         bcs     LEDDF                           ; ED8B B0 52
         ldx     #$13                            ; ED8D A2 13
         .byte   $2C                             ; ED8F 2C
@@ -6361,29 +6408,29 @@ LEDCB:  cmp     #$BB                            ; EDCB C9 BB
 LEDD8:  cmp     #$B8                            ; EDD8 C9 B8
         bcs     SyntaxErr7                      ; EDDA B0 B7
 LEDDC:  jsr     LD912                           ; EDDC 20 12 D9
-LEDDF:  sta     HRS3+1                          ; EDDF 85 52
+LEDDF:  sta     INSTR                           ; EDDF 85 52
         stx     INDIC0+1                        ; EDE1 86 56
         lda     VARAPL+14                       ; EDE3 A5 DE
-        sta     HRS4                            ; EDE5 85 53
+        sta     INSTR+1                         ; EDE5 85 53
         lda     VARAPL+15                       ; EDE7 A5 DF
-        sta     HRS4+1                          ; EDE9 85 54
+        sta     INSTR+2                         ; EDE9 85 54
         ldy     #$FF                            ; EDEB A0 FF
 LEDED:  iny                                     ; EDED C8
-        lda     HRS3+1,y                        ; EDEE B9 52 00
+        lda     INSTR,y                         ; EDEE B9 52 00
         jsr     LCCDB                           ; EDF1 20 DB CC
         jsr     LCCD2                           ; EDF4 20 D2 CC
         dex                                     ; EDF7 CA
         bpl     LEDED                           ; EDF8 10 F3
         lda     #$7F                            ; EDFA A9 7F
         BRK_TELEMON XWR0                             ; EDFC 00 10
-        jsr     LD3CB                           ; EDFE 20 CB D3
+        jsr     DesasInstr                      ; EDFE 20 CB D3
         jsr     LCC53                           ; EE01 20 53 CC
         jmp     LED2C                           ; EE04 4C 2C ED
 
 ; ----------------------------------------------------------------------------
-LEE07:  lda     Proc1+1                         ; EE07 AD E3 04
+LEE07:  lda     LoadByte+1                      ; EE07 AD E3 04
         sta     Ptr1                            ; EE0A 8D EE 04
-        lda     Proc1+2                         ; EE0D AD E4 04
+        lda     LoadByte+2                      ; EE0D AD E4 04
         sta     Ptr1+1                          ; EE10 8D EF 04
         lda     TXTPTR                          ; EE13 A5 E9
         sta     Ptr2                            ; EE15 8D F0 04
@@ -6393,9 +6440,9 @@ LEE07:  lda     Proc1+1                         ; EE07 AD E3 04
 
 ; ----------------------------------------------------------------------------
 LEE1E:  lda     Ptr1                            ; EE1E AD EE 04
-        sta     Proc1+1                         ; EE21 8D E3 04
+        sta     LoadByte+1                      ; EE21 8D E3 04
         lda     Ptr1+1                          ; EE24 AD EF 04
-        sta     Proc1+2                         ; EE27 8D E4 04
+        sta     LoadByte+2                      ; EE27 8D E4 04
         lda     Ptr2                            ; EE2A AD F0 04
         sta     TXTPTR                          ; EE2D 85 E9
         lda     Ptr2+1                          ; EE2F AD F1 04
@@ -6410,7 +6457,7 @@ LEE35:  jsr     LEE07                           ; EE35 20 07 EE
 LEE41:  lda     #$7F                            ; EE41 A9 7F
         BRK_TELEMON XWR0                             ; EE43 00 10
         sec                                     ; EE45 38
-        lda     Proc1+1                         ; EE46 AD E3 04
+        lda     LoadByte+1                      ; EE46 AD E3 04
         sbc     Ptr1                            ; EE49 ED EE 04
         sta     VARAPL+6                        ; EE4C 85 D6
         lda     Ptr1                            ; EE4E AD EE 04
@@ -6508,7 +6555,7 @@ LEEE1:  bit     XLPRBI                          ; EEE1 24 48
         tay                                     ; EEF9 A8
         pla                                     ; EEFA 68
         jsr     LCAF2                           ; EEFB 20 F2 CA
-        jsr     LC8B4                           ; EEFE 20 B4 C8
+        jsr     CheckBreak                      ; EEFE 20 B4 C8
         bcs     LEF11                           ; EF01 B0 0E
         BRK_TELEMON XCRLF                             ; EF03 00 25
 LEF05:  iny                                     ; EF05 C8
@@ -6585,8 +6632,8 @@ LEF70:  jsr     IncTXTPTR                       ; EF70 20 85 CE
         ldy     SCEDEB+1                        ; EF7D A4 5D
         sta     DECDEB                          ; EF7F 85 04
         sty     DECDEB+1                        ; EF81 84 05
-        sta     Proc1+9                         ; EF83 8D EB 04
-        sty     Proc1+10                        ; EF86 8C EC 04
+        sta     StoreByte2+1                    ; EF83 8D EB 04
+        sty     StoreByte2+2                    ; EF86 8C EC 04
         lda     SCEFIN                          ; EF89 A5 5E
         ldy     SCEFIN+1                        ; EF8B A4 5F
         sta     DECFIN                          ; EF8D 85 06
@@ -6600,7 +6647,7 @@ LEF9B:  ldy     #$00                            ; EF9B A0 00
         lda     (TXTPTR),y                      ; EF9D B1 E9
         beq     LEFEF                           ; EF9F F0 4E
 LEFA1:  lda     (TXTPTR),y                      ; EFA1 B1 E9
-        jsr     Proc1+8                         ; EFA3 20 EA 04
+        jsr     StoreByte2                      ; EFA3 20 EA 04
         jsr     LCCD2                           ; EFA6 20 D2 CC
         iny                                     ; EFA9 C8
         cpy     #$03                            ; EFAA C0 03
@@ -6615,7 +6662,7 @@ LEFB6:  lda     BUFEDT,x                        ; EFB6 BD 90 05
         beq     LEFCC                           ; EFBD F0 0D
         ldy     VARAPL+5                        ; EFBF A4 D5
         lda     (TXTPTR),y                      ; EFC1 B1 E9
-        jsr     Proc1+8                         ; EFC3 20 EA 04
+        jsr     StoreByte2                      ; EFC3 20 EA 04
         jsr     LCCD2                           ; EFC6 20 D2 CC
         iny                                     ; EFC9 C8
         bne     LEFAE                           ; EFCA D0 E2
@@ -6626,18 +6673,18 @@ LEFD0:  ldx     #$00                            ; EFD0 A2 00
         inc     VARAPL+6                        ; EFD2 E6 D6
 LEFD4:  lda     BUFTRV,x                        ; EFD4 BD 00 01
         beq     LEFAE                           ; EFD7 F0 D5
-        jsr     Proc1+8                         ; EFD9 20 EA 04
+        jsr     StoreByte2                      ; EFD9 20 EA 04
         jsr     LCCD2                           ; EFDC 20 D2 CC
         inx                                     ; EFDF E8
         bne     LEFD4                           ; EFE0 D0 F2
-LEFE2:  jsr     Proc1+8                         ; EFE2 20 EA 04
+LEFE2:  jsr     StoreByte2                      ; EFE2 20 EA 04
         jsr     LCCD2                           ; EFE5 20 D2 CC
         iny                                     ; EFE8 C8
         jsr     IncTXTPTR                       ; EFE9 20 85 CE
         jmp     LEF9B                           ; EFEC 4C 9B EF
 
 ; ----------------------------------------------------------------------------
-LEFEF:  jsr     Proc1+8                         ; EFEF 20 EA 04
+LEFEF:  jsr     StoreByte2                      ; EFEF 20 EA 04
         lda     TXTPTR                          ; EFF2 A5 E9
         ldy     TXTPTR+1                        ; EFF4 A4 EA
         jsr     LD236                           ; EFF6 20 36 D2
@@ -6665,7 +6712,7 @@ HIRES:  tax                                     ; F00D AA
 LF015:  jmp     LCF98                           ; F015 4C 98 CF
 
 ; ----------------------------------------------------------------------------
-SymbolTable:
+MonitorTable:
         .byte   "ACC1E "                        ; F018 41 43 43 31 45 20
 ; ----------------------------------------------------------------------------
         .word   $0060                           ; F01E 60 00
@@ -8674,7 +8721,7 @@ SymbolTable:
 ; ----------------------------------------------------------------------------
         .word   $001D                           ; FFC6 1D 00
 ; ----------------------------------------------------------------------------
-SymbolTableEnd:
+MonitorTableEnd:
         .byte   $00                             ; FFC8 00
 ; Copyrights
 teleass_signature:

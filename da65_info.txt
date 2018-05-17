@@ -11,100 +11,142 @@
 
 		################################################################## TELEMON
 
-############################################################Page 0
-LABEL { NAME "RESB";   ADDR  $02; Size 2;  };
-LABEL { NAME "RES";    ADDR  $00; Size 2;  };
-LABEL { NAME "DECDEB"; ADDR  $04; Size 2;  };
-LABEL { NAME "DECFIN"; ADDR  $06; Size 2;  };
-LABEL { NAME "DECCIB"; ADDR  $08; Size 2;  };
-LABEL { NAME "DECTRV"; ADDR  $0A; Size 2;  };
-LABEL { NAME "ADSCR";  ADDR  $26; Size 2;  };
-LABEL { NAME "HRSY";   ADDR  $47; Size 1;  };
-LABEL { NAME "XLPRBI"; ADDR  $48; Size 1;     COMMENT "Printer flag (b7)"; };
-LABEL { NAME "HRSX40"; ADDR  $49; Size 1;  };
-LABEL { NAME "HRSX6";  ADDR  $4A; Size 1;  };
-LABEL { NAME "HRS1";   ADDR  $4D; Size 2;  };
-LABEL { NAME "HRS2";   ADDR  $4F; Size 2;  };
-LABEL { NAME "HRS3";   ADDR  $51; Size 2;  };
-LABEL { NAME "HRS4";   ADDR  $53; Size 2;  };
-LABEL { NAME "INDIC0";  ADDR  $55; Size 2;    COMMENT "Also HRS5"; };
-LABEL { NAME "INDIC2"; ADDR  $57; Size 1;     COMMENT "Also HRSFB"; };
-LABEL { NAME "SCEDEB"; ADDR  $5C; Size 2;  };
-LABEL { NAME "SCEFIN"; ADDR  $5E; Size 2;  };
-# LABEL { NAME "ACCPS";  ADDR  $6E; Size 1;   COMMENT "Also XA2EA1"; };
-LABEL { NAME "VARLNG"; ADDR  $8c; SIZE 44; };
+############################################################
+# Page 00
+############################################################
+LABEL { ADDR  $00; Size 2; NAME "RES";     };
+LABEL { ADDR  $02; Size 2; NAME "RESB";    };
+LABEL { ADDR  $04; Size 2; NAME "DECDEB"; };
+LABEL { ADDR  $06; Size 2; NAME "DECFIN";  };
+LABEL { ADDR  $08; Size 2; NAME "DECCIB";  };
+LABEL { ADDR  $0A; Size 2; NAME "DECTRV";  };
 
-#LABEL { NAME "VARAPL"; ADDR  $d0; SIZE 44+2?; };
-LABEL { NAME "VARAPL";  ADDR  $d0; SIZE 18; };
-#LABEL { NAME "CharGet"; ADDR  $E2; SIZE  6; };
-LABEL { NAME "CharGet"; ADDR  $E2; };
-#LABEL { NAME "CharGot"; ADDR  $E8; SIZE 11; };
-LABEL { NAME "CharGot"; ADDR  $E8; };
-LABEL { NAME "TXTPTR";  ADDR  $E9; SIZE  2; };
-LABEL { NAME "VARAPL2";  ADDR  $EB; SIZE 19; };
+LABEL { ADDR  $0c; SIZE 1; NAME "TR0";    };
+LABEL { ADDR  $0d; SIZE 1; NAME "TR1";    };
+LABEL { ADDR  $0e; SIZE 1; NAME "TR2";    };
+LABEL { ADDR  $0f; SIZE 1; NAME "TR3";    };
+LABEL { ADDR  $11; SIZE 1; NAME "TR5";    };
+LABEL { ADDR  $12; SIZE 1; NAME "TR6";    };
+LABEL { ADDR  $14; SIZE 1; NAME "DEFAFF"; };
 
-LABEL { NAME "TR0";    ADDR  $0c; SIZE 1;  };
-LABEL { NAME "TR1";    ADDR  $0d; SIZE 1;  };
-LABEL { NAME "TR2";    ADDR  $0e; SIZE 1;  };
-LABEL { NAME "TR3";    ADDR  $0f; SIZE 1;  };
-LABEL { NAME "TR5";    ADDR  $11; Size 1;  };
-LABEL { NAME "TR6";    ADDR  $12; Size 1;  };
-LABEL { NAME "DEFAFF";    ADDR  $14; Size 1;  };
+LABEL { ADDR  $26; Size 2; NAME "ADSCR";   };
+LABEL { ADDR  $47; Size 1; NAME "HRSY";    };
+LABEL { ADDR  $48; Size 1; NAME "XLPRBI";     COMMENT "Printer flag (b7)"; };
+LABEL { ADDR  $49; Size 1; NAME "HRSX40";  };
+LABEL { ADDR  $4A; Size 1; NAME "HRSX6";   };
 
-############################################################Page 1
+LABEL { ADDR $4D; Size 5; NAME "REGS";       COMMENT "Sauvegarde des registres: S, P, X, Y, ACC"; };
+LABEL { ADDR $52; Size 3; NAME "INSTR";      COMMENT "Instruction en cours (TRACE ou ASSEM)"; };
+
+# LABEL { ADDR $4D; Size 2; NAME "HRS1";       COMMENT "HRS1: S, HRS1+1: P"; };
+# LABEL { ADDR $4F; Size 2; NAME "HRS2";       COMMENT "HRS2: X, HRS2+1: Y"; };
+# LABEL { ADDR $51; Size 2; NAME "HRS3";       COMMENT "HRS3: ACC"; };
+# LABEL { ADDR $53; Size 2; NAME "HRS4";    };
+
+LABEL { ADDR  $55; Size 2; NAME "INDIC0";     COMMENT "Also HRS5"; };
+LABEL { ADDR  $57; Size 1; NAME "INDIC2";     COMMENT "Also HRSFB"; };
+LABEL { ADDR  $5C; Size 2; NAME "SCEDEB";     COMMENT "Valeur par défaut: $0800"; };
+LABEL { ADDR  $5E; Size 2; NAME "SCEFIN";  };
+# LABEL { ADDR  $6E; Size 1; NAME "ACCPS";    COMMENT "Also XA2EA1"; };
+LABEL { ADDR  $8c; SIZE 44; NAME "VARLNG"; };
+
+#LABEL { ADDR  $d0; SIZE 48; NAME "VARAPL"; };
+LABEL { ADDR  $d0;  SIZE 18; NAME "VARAPL";  };
+#LABEL { ADDR  $E2; SIZE  6; NAME "CharGet"; };
+LABEL { ADDR  $E2;           NAME "CharGet"; };
+#LABEL { ADDR  $E8; SIZE 11; NAME "CharGot"; };
+LABEL { ADDR  $E8;           NAME "CharGot"; };
+LABEL { ADDR  $E9;  SIZE  2; NAME "TXTPTR";  };
+
+#LABEL { NAME "VARAPL2";  ADDR  $EB; SIZE 19; };
+LABEL { ADDR $EB; SIZE 9; NAME "VARAPL2"; };
+LABEL { ADDR $F4; SIZE 2; NAME "GlobalTblStart"; };
+LABEL { ADDR $F6; SIZE 2; NAME "GlobalTblEnd"; };
+LABEL { ADDR $F8; SIZE 2; NAME "GlobalTblLimit"; };
+LABEL { ADDR $FA; SIZE 2; NAME "LocalTblStart"; };
+LABEL { ADDR $FC; SIZE 2; NAME "LocalTblEnd"; };
+#LABEL { ADDR $FE; SIZE 1; NAME "UNUSED"; };
+
+# VARAPL2+09: Debut Table Globale            ($3000)
+# VARAPL2+11: Pointeur courant Table Globale ($3000)
+# VARAPL2+13: Limite Table Globale           ($3FFF)
+#
+# VARAPL2+15: Debut table locale             (SCEFIN)
+# VARAPL2+17: Fin table locale               (SCEFIN)
+
+
+############################################################
+# Page 01
+############################################################
 # Stack
-LABEL { NAME "BUFTRV";   ADDR  $100;  SIZE 256;  };
+LABEL { ADDR  $100; SIZE 256; NAME "BUFTRV"; };
 
-############################################################Page 2
-LABEL { NAME "TABDRV"; ADDR  $0208; SIZE 4; };
-LABEL { NAME "FLGTEL"; ADDR  $020D; Size 1; };
-LABEL { NAME "SCRX";   ADDR  $0220; SIZE 1; };
-LABEL { NAME "SCRY";   ADDR  $0224; SIZE 1; };
-LABEL { NAME "SCRDX";  ADDR  $0228; SIZE 1; };
-LABEL { NAME "SCRFX";  ADDR  $022C; SIZE 1; };
-LABEL { NAME "SCRDY";  ADDR  $0230; SIZE 1; };
-LABEL { NAME "SCRFY";  ADDR  $0234; SIZE 1; };
-LABEL { NAME "FLGSCR"; ADDR  $0248; SIZE 1; };
-LABEL { NAME "FLGKBD"; ADDR  $0275; SIZE 1; };
-LABEL { NAME "LPRX";   ADDR  $0286; SIZE 1; };
-LABEL { NAME "KBDSHT"; ADDR  $0278; SIZE 1; };
-LABEL { NAME "LPRY";   ADDR  $0287; SIZE 1; };
-LABEL { NAME "LPRFY";  ADDR  $0289; SIZE 1;   COMMENT "Nombre de lignes par page pour l'imprimante"; };
-LABEL { NAME "LPRSY";  ADDR  $028B; SIZE 1;   COMMENT "N° de ligne pour le saut de    page"; };
-LABEL { NAME "VNMI";   ADDR  $02F4; Size 3; };
-LABEL { NAME "VAPLIC"; ADDR  $02FD; Size 2; };
 
-############################################################Page 3
+############################################################
+# Page 02
+############################################################
+LABEL { ADDR  $0208; SIZE 4; NAME "TABDRV"; };
+LABEL { ADDR  $020D; Size 1; NAME "FLGTEL"; };
+LABEL { ADDR  $0220; SIZE 4; NAME "SCRX";   };
+LABEL { ADDR  $0224; SIZE 4; NAME "SCRY";   };
+LABEL { ADDR  $0228; SIZE 4; NAME "SCRDX";  };
+LABEL { ADDR  $022C; SIZE 4; NAME "SCRFX";  };
+LABEL { ADDR  $0230; SIZE 4; NAME "SCRDY";  };
+LABEL { ADDR  $0234; SIZE 4; NAME "SCRFY";  };
+LABEL { ADDR  $0248; SIZE 4; NAME "FLGSCR"; };
+LABEL { ADDR  $0275; SIZE 1; NAME "FLGKBD"; };
+LABEL { ADDR  $0278; SIZE 1; NAME "KBDSHT"; };
+LABEL { ADDR  $0286; SIZE 1; NAME "LPRX";   };
+LABEL { ADDR  $0287; SIZE 1; NAME "LPRY";   };
+LABEL { ADDR  $0289; SIZE 1; NAME "LPRFY";    COMMENT "Nombre de lignes par page pour l'imprimante"; };
+LABEL { ADDR  $028B; SIZE 1; NAME "LPRSY";    COMMENT "N° de ligne pour le saut de    page"; };
+LABEL { ADDR  $02F4; SIZE 3; NAME "VNMI";   };
+LABEL { ADDR  $02FD; SIZE 2; NAME "VAPLIC"; };
+
+############################################################
+# Page 03
+############################################################
 
 #VIA 1
-LABEL { NAME "V1DRB";  ADDR  $0300;  Size 1;  };
-LABEL { NAME "V1DRA";  ADDR  $0301;  Size 1;  };
-LABEL { NAME "V1DDRB"; ADDR  $0302;  Size 1;  };
-LABEL { NAME "V1DDRA"; ADDR  $0303;  Size 1;  };
+LABEL { ADDR  $0300; SIZE 1; NAME "V1DRB";  };
+LABEL { ADDR  $0301; SIZE 1; NAME "V1DRA";  };
+LABEL { ADDR  $0302; SIZE 1; NAME "V1DDRB"; };
+LABEL { ADDR  $0303; SIZE 1; NAME "V1DDRA"; };
 
-LABEL { NAME "V1T1";   ADDR  $0304;  Size 2;  };
-LABEL { NAME "V1T1L";  ADDR  $0306;  Size 2;  };
-LABEL { NAME "V1T2";   ADDR  $0308;  Size 2;  };
+LABEL { ADDR  $0304; SIZE 2; NAME "V1T1";   };
+LABEL { ADDR  $0306; SIZE 2; NAME "V1T1L";  };
+LABEL { ADDR  $0308; SIZE 2; NAME "V1T2";   };
 
-LABEL { NAME "V1ACR";  ADDR  $030b;  Size 1;  };
-LABEL { NAME "V1PCR";  ADDR  $030c;  Size 1;  };
-LABEL { NAME "V1IFR";  ADDR  $030d;  Size 1;  };
-LABEL { NAME "V1ER";   ADDR  $030e;  Size 1;  };
-LABEL { NAME "V1DRAB"; ADDR  $030f;  Size 1;  };
+LABEL { ADDR  $030b; SIZE 1; NAME "V1ACR";  };
+LABEL { ADDR  $030c; SIZE 1; NAME "V1PCR";  };
+LABEL { ADDR  $030d; SIZE 1; NAME "V1IFR";  };
+LABEL { ADDR  $030e; SIZE 1; NAME "V1ER";   };
+LABEL { ADDR  $030f; SIZE 1; NAME "V1DRAB"; };
 
 
 #via2
 LABEL { NAME "V2DRA";     ADDR  $0321;   };
 
-############################################################Page 4
-LABEL { NAME "EXBNK";  ADDR  $040C;          };
-LABEL { NAME "VEXBNK"; ADDR  $0414; SIZE 3;  };
-LABEL { NAME "BNKCIB"; ADDR  $0417; SIZE 1;  };
+############################################################
+# Page 04
+############################################################
+LABEL { ADDR  $040C;         NAME "EXBNK";  };
+LABEL { ADDR  $0414; SIZE 3; NAME "VEXBNK"; };
+LABEL { ADDR  $0417; SIZE 1; NAME "BNKCIB"; };
 
-LABEL { ADDR $04E0; NAME "DEFBNK"; SIZE 1;    COMMENT "Banque par défaut"; };
-LABEL { ADDR $04E1; NAME "BNKSAV"; SIZE 1;    COMMENT "Sauvegarde de la banque courante?"; };
+LABEL { ADDR $04E0; SIZE 1; NAME "DEFBNK";     COMMENT "Banque par défaut"; };
+LABEL { ADDR $04E1; SIZE 1; NAME "BNKSAV";     COMMENT "Sauvegarde de la banque courante?"; };
 
-LABEL { NAME "Proc1"; ADDR $04E2; SIZE 12;    COMMENT "Trouver un meilleur nom        (cf $D101)"; };
+LABEL { ADDR $04E2; SIZE 4; NAME "LoadByte";   COMMENT "Lit un octet   (routine copiée depuis $D101)"; };
+LABEL { ADDR $04E6; SIZE 4; NAME "StoreByte";  COMMENT "Ecrit un octet (routine copiée depuis $D105)"; };
+LABEL { ADDR $04EA; SIZE 4; NAME "StoreByte2"; COMMENT "Ecrit un octet (routine copiée depuis $D109)"; };
+# 04E2 LDA $xxxx
+# 04E5 RTS
+# 04E6 STA $xxxx
+# 04E9 RTS
+# 04EA STA $xxxx
+# 04ED RTS
+
 LABEL { NAME "Ptr1";  ADDR $04EE; SIZE 2 ;    COMMENT "Trouver un meilleur nom"; };
 LABEL { NAME "Ptr2";  ADDR $04F0; SIZE 2 ;    COMMENT "Trouver un meilleur nom"; };
 # LABEL { ADDR $04f2; NAME "Flags";             COMMENT "b6: Trace, aussi utilisé       comme pointeur avec $04F3 (adresse emplacement physique pour l'assemblage)";};
@@ -112,22 +154,22 @@ LABEL { ADDR $4f2; SIZE 2; NAME "Ptr3";       COMMENT "b6: Trace, aussi utilisé
 ###LABEL { ADDR $04f3; NAME "";               COMMENT ""; };
 LABEL { ADDR $04f4; NAME "Proc2"; SIZE 6;     COMMENT "Copie de LEA0F-LEA14 (Trouver  un meilleur nom)"; };
 
-############################################################Page 5
+############################################################
+# Page 05
+############################################################
 
-LABEL { ADDR $0500; NAME "DRIVE"; SIZE 1; };
-LABEL { ADDR $0512; NAME "ERRNB"; SIZE 1; };
-LABEL { ADDR $0513; NAME "SAVES"; SIZE 1; };
-LABEL { NAME "BUFNOM"; ADDR  $0517; SIZE 11; };
-LABEL { ADDR $0528; NAME "VSALO0"; SIZE 1; };
-LABEL { ADDR $0529; NAME "VSALO1"; SIZE 1; };
-LABEL { ADDR $052C; NAME "FTYPE"; SIZE 1; };
-LABEL { ADDR $052D; NAME "INPIS"; SIZE 1;     COMMENT "Also DESALO"; };
-LABEL { ADDR $052E; NAME "INSEC"; SIZE 1; };
-LABEL { ADDR $052F; NAME "PARPIS"; SIZE 1; };
-LABEL { ADDR $0530; NAME "PARSEC"; SIZE 1; };
-LABEL { ADDR $0531; NAME "EXSALO"; SIZE 2; };
-LABEL { ADDR $055D; NAME "EXTDEF"; SIZE 3; };
-LABEL { NAME "BUFEDT"; ADDR  $0590; size 110;};
+LABEL { ADDR $0500; SIZE   1; NAME "DRIVE";  };
+LABEL { ADDR $0512; SIZE   1; NAME "ERRNB";  };
+LABEL { ADDR $0513; SIZE   1; NAME "SAVES";  };
+LABEL { ADDR $0517; SIZE  11; NAME "BUFNOM"; };
+LABEL { ADDR $0528; SIZE   1; NAME "VSALO0"; };
+LABEL { ADDR $0529; SIZE   1; NAME "VSALO1"; };
+LABEL { ADDR $052C; SIZE   1; NAME "FTYPE";  };
+LABEL { ADDR $052D; SIZE   2; NAME "DESALO"; };
+LABEL { ADDR $052F; SIZE   2; NAME "FISALO"; };
+LABEL { ADDR $0531; SIZE   2; NAME "EXSALO"; };
+LABEL { ADDR $055D; SIZE   3; NAME "EXTDEF"; };
+LABEL { ADDR $0590; SIZE 110; NAME "BUFEDT"; };
 
 
 
@@ -137,8 +179,8 @@ LABEL { NAME "BUFEDT"; ADDR  $0590; size 110;};
 LABEL { ADDR $c62b; NAME "Registers_str";     COMMENT "Messages divers"; };
 LABEL { ADDR $c6b5; NAME "Banque_str"; };
 LABEL { ADDR $c2c6; NAME "CommandsTable"; };
-LABEL { ADDR $ffc8; NAME "SymbolTableEnd"; };
-#LABEL { ADDR $f018; NAME "SymbolTable"; };
+LABEL { ADDR $ffc8; NAME "MonitorTableEnd"; };
+#LABEL { ADDR $f018; NAME "MonitorTable"; };
 LABEL { ADDR $c6e5; NAME "Menu_str"; };
 LABEL { ADDR $d0b4; NAME "Warm_start"; };
 LABEL { ADDR $c641; NAME "Source_str"; };
@@ -165,18 +207,9 @@ LABEL { ADDR $c6d8; NAME "Occurences_str"; };
 LABEL { ADDR $c6be; NAME "MAJ_min_str"; };
 
 
-
-RANGE { START $c003; END $c0aa; TYPE TextTable; NAME "MnemonicsTable"; COMMENT "Mnemonics table"; };
-RANGE { START $c0ab; END $c0c5; TYPE TextTable; NAME "PseudoOps";      COMMENT "Pseudo Operations"; };
-
-RANGE { START $c0c6; END $c1c5; TYPE ByteTable; NAME "Oplen";          COMMENT "Oplen"; };
-RANGE { START $c1c6; END $c2c5; TYPE ByteTable; NAME "Opmode";         COMMENT "Opmode"; };
-RANGE { START $c2c6; END $c3c6; TYPE TextTable; NAME "CommandsTable";  COMMENT "Commands"; };
-RANGE { START $c3c7; END $c432; TYPE RTSTable;  NAME "CommandsAddr";   COMMENT "Commands Addresses"; };
-
-RANGE { START $c433; END $c62a; TYPE TextTable; NAME "ErrMsgs";        COMMENT "Error Messages"; };
-RANGE { START $c62b; END $c715; TYPE TextTable;                        COMMENT "Status Messages"; };
-
+############################################################
+# Page C7
+############################################################
 LABEL { ADDR $c72c; NAME "DispYSpace";        COMMENT "Display Y spaces"; };
 LABEL { ADDR $c735; NAME "DispSpace";         COMMENT "Display a space"; };
 LABEL { ADDR $c73a; NAME "DispRegs";          COMMENT "Display 6502 registers"; };
@@ -189,34 +222,70 @@ LABEL { ADDR $c7d9; NAME "PutHexa";           COMMENT "Put hexa string represent
 LABEL { ADDR $c7ed; NAME "PushHexa";          COMMENT "Append hexa string representation of ACC at bottom of the stack"; };
 LABEL { ADDR $c7fe; NAME "PutBitStr";         COMMENT "Put bit string representation of ACC at bottom of the stack"; };
 
+
+############################################################
+# Page C8
+############################################################
 LABEL { ADDR $c81b; NAME "DispErrorX";        COMMENT "Display error number X"; };
+LABEL { ADDR $c879; NAME "GotoAY";            COMMENT "Place le curseur en ligne ACC, colonne Y"; };
+LABEL { ADDR $c8b4; NAME "CheckBreak";        COMMENT "Gère l'arrêt temporaire (<SPACE>) ou définitif (<ESC> ou <CTRL+C>)) d'une     commande. Sortie avec C=1 si arrêt définitif"; };
 LABEL { ADDR $c8f5; NAME "DispBank";          COMMENT "Display 'Banque ' + bank number ACC"; };
 
 LABEL { ADDR $c8d1; NAME "GetKey";            COMMENT "Attend un caractère au clavier"; };
 
+
+############################################################
+# Page C9
+############################################################
 LABEL { ADDR $c9bf; NAME "min_MAJ";           COMMENT "Converti un caractère alpha minuscule en MAJUSCULE"; };
 
 LABEL { ADDR $c9cd; NAME "MnemonicLookup";    COMMENT "Recherche une instruction dans la table des mnemoniques"; };
 LABEL { ADDR $c9da; NAME "TableLookup";       COMMENT "Recherche une chaine dans une table. Entrée avec X = offset dans le buffer    d'entrée"; };
 LABEL { ADDR $ca1d; NAME "CommandLookup";     COMMENT "Recherche une commande dans la table des commandes"; };
 
-LABEL { ADDR $ca3a; NAME "PutMnemo";          COMMENT "Put mnemonic number ACC at bottom of the stack"; };
-LABEL { ADDR $ca64; NAME "DecodeOpc";         COMMENT "Decode opcode in ACC"; };
+
+############################################################
+# Page CA
+############################################################
 LABEL { ADDR $ca2d; NAME "SkipSpaces";        COMMENT "Saute les premiers espaces dans BUFEDT"; };
+LABEL { ADDR $ca3a; NAME "PutMnemo";          COMMENT "Put mnemonic number ACC at bottom of the stack"; };
+LABEL { ADDR $ca64; NAME "DecodeOpc";         COMMENT "Decode opcode. Entrée: ACC:=OpCode. Sortie: ACC:=OpCode, INDIC0=Code,          INDIC0+1:=Longueur, INDIC2:=Index mnémonique"; };
+LABEL { ADDR $ca79; NAME "EncodeMnemonic";    COMMENT "Encode une instruction. Entrée: ACC:=Mode, INDIC2:=Index de l'instruction dans Mnemonics. Sortie: C=0->Invalide, sinon Y:=ACC:=OpCode"; };
 
+
+############################################################
+# Page CD
+############################################################
 LABEL { ADDR $cd2c; NAME "EvalBinWord";       COMMENT "Saisie d'un nombre en binaire (%011011), maxi 2 octets"; };
+LABEL { ADDR $cd87; NAME "EvalNumber";        COMMENT "Evalue une valeur hexa, binaire, décimale, ou un symbole)"; };
+LABEL { ADDR $cde5; NAME "LocalLookup";       COMMENT "Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
 
-LABEL { ADDR $cde5; NAME "LocSymLookup";      COMMENT "Find symbol in local symbol table, return C=1 + symbol address in VARAPL+3 if found"; };
-LABEL { ADDR $ce4b; NAME "GlobSymLookup";     COMMENT "Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3   if found"; };
-LABEL { ADDR $ce61; NAME "MonSymLookup";      COMMENT "Find symbol in monitor symbol table, return C=1 + symbol address in VARAPL+3  if found"; };
-LABEL { ADDR $ce77; NAME "SymLookup";         COMMENT "Find symbol in global, local, monitor symbol table, return C=1 + symbol       address in VARAPL+3 if found"; };
+
+############################################################
+# Page CE
+############################################################
+LABEL { ADDR $ce4b; NAME "GlobalLookup";      COMMENT "Find symbol in global symbol table, return C=1 + symbol address in VARAPL+3   if found"; };
+LABEL { ADDR $ce61; NAME "MonitorLookup";     COMMENT "Find symbol in monitor symbol table, return C=1 + symbol address in VARAPL+3  if found"; };
+LABEL { ADDR $ce77; NAME "SymbolLookup";      COMMENT "Find symbol in global, local, monitor symbol table, return C=1 + symbol       address in VARAPL+3 if found"; };
 
 LABEL { ADDR $CE85; NAME "IncTXTPTR";         COMMENT "Add Y to TXTPTR"; };
-LABEL { ADDR $ce90; NAME "LCE90"; };
+LABEL { ADDR $ce90; NAME "EvalTerme";         COMMENT "Evalue un terme (caractère ASCII, >nnnn, <nnnn, valeur hexa, binaire,         décimale, symbole)"; };
 
 LABEL { ADDR $cedf; NAME "EvalExpr";          COMMENT "Evalue une expression"; };
+
+
+############################################################
+# Page CF
+############################################################
 LABEL { ADDR $cf06; NAME "EvalSomme";         COMMENT "Evalue une somme"; };
+LABEL { ADDR $cf36; NAME "InitStack";         COMMENT "Initialise S à $FE"; };
+LABEL { ADDR $cf40; NAME "InitTXTPTR";        COMMENT "Initialise TXTPTR := SCEDEB-1 et place un 0 en (TXTPTR)"; };
 LABEL { ADDR $cf1e; NAME "EvalDifference";    COMMENT "Evalue une différence"; };
+LABEL { ADDR $cf53; NAME "SetTXTPTR";         COMMENT "Set TXTPTR := BUFEDT+X"; };
+LABEL { ADDR $cf73; NAME "LocalTblInit";      COMMENT "Initialise les pointeurs de la table des symboles locaux"; };
+LABEL { ADDR $cf80; NAME "PrinterOff";        COMMENT "Ferme l'imprimante sur le canal 0 et ouvre l'écran"; };
+LABEL { ADDR $cf8d; NAME "PrinterOn";         COMMENT "Ouvre l'imprimante sur le canal 0 et ferme l'écran"; };
+
 
 #
 # ATTENTION Labels en double
@@ -254,27 +323,40 @@ LABEL { ADDR $ef28; NAME "SyntaxErr8";        COMMENT "Err $00"; };
 
 
 
-LABEL { ADDR $cf53; NAME "SetTXTPTR";         COMMENT "Set TXTPTR := BUFEDT+X"; };
-LABEL { ADDR $cf73; NAME "LocTblInit";        COMMENT "Initialise les pointeurs de la table des symboles locaux"; };
-
 # Pour un brk nn
 #RANGE { START $d075; END $d075; TYPE ByteTable; };
 #RANGE { START $d076; END $d078; TYPE Code; };
 
+
+############################################################
+# Page D0
+############################################################
 LABEL { ADDR $d000; NAME "ExecCmd";           COMMENT "Execute command number ACC"; };
 LABEL { ADDR $d061; NAME "QUIT";              COMMENT "QUIT: sortie du moniteur, retour au basic par JMP $C000"; };
 LABEL { ADDR $d070; NAME "teleass_start";     COMMENT "teleass_start";  };
 
-LABEL { NAME "_CharGet"; ADDR $D0F0;          COMMENT "Prends le caractère suivant en sautant les espaces (Copié en VARAPL+18)"; };
-LABEL { NAME "_CharGot"; ADDR $D0F6;          COMMENT "Prends le caractère courant"; };
-LABEL { NAME "_Proc1";   ADDR $D101;          COMMENT "Trouver un meilleur nom (cf $04E2)"; };
-LABEL { ADDR $d120;      NAME "Clear";        COMMENT "Efface le programme et initialise les pointeurs de la table des symboles      locaux"; };
+LABEL { ADDR $D0F0; NAME "_CharGet";          COMMENT "Prends le caractère suivant en sautant les espaces (Copié en VARAPL+18)"; };
+LABEL { ADDR $D0F6; NAME "_CharGot";          COMMENT "Prends le caractère courant"; };
+
+
+############################################################
+# Page D1
+############################################################
+LABEL { ADDR $D101; NAME "_Proc1";            COMMENT "Trouver un meilleur nom (cf $04E2)"; };
+LABEL { ADDR $D10d; NAME "IsNumeric";         COMMENT "Vérifie si ACC contient caractère entre '0' et '9' ou un $00 ou un '.         Sortie C=0-> '0' à '9', Z=1->$00 ou ', sinon C=1 & Z=0"; };
+LABEL { ADDR $d120; NAME "Clear";             COMMENT "Efface le programme et initialise les pointeurs de la table des symboles      locaux"; };
+
+LABEL { ADDR $D135; NAME "NEW" ;              COMMENT "NEW : efface le programme source en mémoire"; };
 
 LABEL { ADDR $d1ac; NAME "EvalComma";         COMMENT "Evalue une ','"; };
 # Points d'entrée des commandes
 
 LABEL { ADDR $d1c8; NAME "LOAD";              COMMENT "LOAD ''NF'' (,A EN) (,V) (,N) : chargement d'un fichier (A EN->force          l'adresse de chargement, V->affiche les adresses de début et fin, N->force le  chargement sans exécution)"; };
 
+
+############################################################
+# Page D2
+############################################################
 LABEL { ADDR $d25e; NAME "EXBNK0ERR";         COMMENT "Exécute une routine en banque 0 et affiche le code d'erreur"; };
 LABEL { ADDR $d26a; NAME "EvalWord";          COMMENT "Evalue un mot, résulat dans AY. Si Z=1 on a évalué un octet"; };
 LABEL { ADDR $d28a; NAME "EXBNK0";            COMMENT "Exécute une routine en banque 0 (adresse en AY)"; };
@@ -283,9 +365,27 @@ LABEL { ADDR $D2B9; NAME "DESAS";             COMMENT "(L)DESAS adrdeb (,adrfin)
 LABEL { ADDR $D2BC; NAME "LDESAS"; };
 LABEL { ADDR $D2D0; NAME "DUMP";              COMMENT "(L)DUMP adrdeb (,adrfin) (,B val) : affiche un dump de la mémoire depuis      l'adress adrdeb de la banque indiquée, ou celle par défaut, jusqu'à adrfin  si précisée"; };
 LABEL { ADDR $D2D3; NAME "LDUMP"; };
+
+
+############################################################
+# Page D3
+############################################################
+LABEL { ADDR $D32C; NAME "BANK";              COMMENT "BANK (val) : sélectionne la banque par défaut (0 à 7, 0 par défaut)"; };
+LABEL { ADDR $D3CB; NAME "DesasInstr";        COMMENT "Désassemble une instruction et l'affiche"; };
+
+
+############################################################
+# Page D5
+############################################################
 LABEL { ADDR $D54B; NAME "LIST";              COMMENT "(L)LIST (numdeb) (-) (numfin) : liste le source du fichier en mémoire. numdeb et numfin sont soit des n° de ligne en décimal, soit des étiquettes"; };
 LABEL { ADDR $D550; NAME "LLIST"; };
 LABEL { ADDR $D589; NAME "RENUM";             COMMENT "RENUM (num1) (,pas) (,numdeb) (,numfin) : renumérotation des lignes de numdeb à numfin avec 'num1' nouvelle 1ère ligne et 'pas' l'incrément. numdeb et       numfin peuvent être des n° de lignes en décimal ou des étiquettes"; };
+
+
+############################################################
+# Page D6
+############################################################
+LABEL { ADDR $D63D; NAME "DELETE";            COMMENT "DELETE (numdeb) (-) (numfin) : supprime les lignes numdeb à numfin. numdeb et  numfin peuvent être des n° de ligne en décimal ou des étiquettes"; };
 LABEL { ADDR $D68E; NAME "DIR";               COMMENT "(L)DIR (''NFA'') : affiche le contenu de la disquette"; };
 LABEL { ADDR $D691; NAME "LDIR"; };
 LABEL { ADDR $D6B2; NAME "SAVEU";             COMMENT "SAVEU ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
@@ -293,87 +393,206 @@ LABEL { ADDR $D6B5; NAME "SAVEO";             COMMENT "SAVEO ''NF'' (,A EN, E EN
 LABEL { ADDR $D6B8; NAME "SAVEM";             COMMENT "SAVEM ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
 LABEL { ADDR $D6AF; NAME "SAVE";              COMMENT "SAVE ''NF'' (,A EN, E EN, (,T EN)) : sauvegarde d'un fichier (cf Stratsed)"; };
 
+
+############################################################
+# Page D7
+############################################################
+LABEL { ADDR $D73A; NAME "DEL";               COMMENT "DEL ''NFA'' : détruit un fichier (cf Stratsed)"; };
+LABEL { ADDR $D758; NAME "DELBAK";            COMMENT "DELBAK : détruit tous les fichiers avec une extension '.BAK'"; };
+LABEL { ADDR $D765; NAME "EXT";               COMMENT "EXT (''ext'') : affiche ou modifie l'extension par défaut (3 caractères maxi)"; };
+
 LABEL { ADDR $d77b; NAME "GetEXTparam"; };
 LABEL { ADDR $d7a1; NAME "SetEXT"; };
 
+LABEL { ADDR $D7DB; NAME "INIT";              COMMENT "INIT : initialise et formatte une disquette (cf Stratsed)" ; };
+LABEL { ADDR $D7C1; NAME "BACKUP";            COMMENT "BACKUP : copie l'intégralité de la disquette (cf Stratsed)"; };
+
+
+############################################################
+# Page DC
+############################################################
 LABEL { ADDR $DC07; NAME "ASSEM";             COMMENT "(L)ASSEM (adrdeb) (,G) (,L) (,S) : assemble le programme en mémoire. adrdeb   indique l'adresse physique à laquelle le programme est assemblé en mémoire.    L'adresse d'origine du programme assemblé doit être indiquée par une directive ORG dans le source"; };
 LABEL { ADDR $DC0A; NAME "LASSEM"; };
 
-LABEL { ADDR $df0a; NAME "DispLocSym";        COMMENT "C65D 'Symboles :'/ C66B 'locaux'"; };
-LABEL { ADDR $df31; NAME "DispGlobSym";       COMMENT "C65D 'Symboles :'/ C672 'globaux'"; };
-LABEL { ADDR $df58; NAME "DispMonSym";        COMMENT "C65D 'Symboles :'/ C67A 'moniteur'"; };
-LABEL { ADDR $df7c; NAME "DispSymTbl";        COMMENT "VARAPL+12: Adr debut de la table, VARAPL+1: Finde la table"; };
 
-LABEL { ADDR $E037; NAME "SYOLD";             COMMENT "SYOLD (adrdeb, adrlim) : retrouve les symboles globaux (après sauvegarde et   rechargement par exemple) et réinitialise les adresses de début et limite de   la table (valeurs par défaut sinon: $3000, $3FFF)"; };
-LABEL { ADDR $E059; NAME "SYDEF";             COMMENT "SYDEF (adrdeb, adrlim (,C)) : sans option, donne les adresses de la table des symboles Globaux, sinon déplace cette table en adrdeb et fixe sa limite à      ardlim. L'option C permet de recopier à partir de adrdeb les symboles globaux  existants, sinon la table sera vide"; };
+############################################################
+# Page DF
+############################################################
+LABEL { ADDR $df0a; NAME "DispLocalTbl";      COMMENT "C65D 'Symboles :'/ C66B 'locaux'"; };
+LABEL { ADDR $df31; NAME "DispGlobalTbl";     COMMENT "C65D 'Symboles :'/ C672 'globaux'"; };
+LABEL { ADDR $df58; NAME "DispMonitorTbl";    COMMENT "C65D 'Symboles :'/ C67A 'moniteur'"; };
+LABEL { ADDR $df7c; NAME "DispSymbolsTbl";    COMMENT "VARAPL+12: Adr debut de la table, VARAPL+1: Fin de la table"; };
+
+
+############################################################
+# Page E0
+############################################################
+LABEL { ADDR $e013; NAME "DispSymbolsTblAddr"; COMMENT "Affiche les adresses de début, actuelle et fin de la table globale des        symboles"; };
+LABEL { ADDR $E037; NAME "SYOLD";              COMMENT "SYOLD (adrdeb, adrlim) : retrouve les symboles globaux (après sauvegarde et   rechargement par exemple) et réinitialise les adresses de début et limite de   la table (valeurs par défaut sinon: $3000, $3FFF)"; };
+LABEL { ADDR $E059; NAME "SYDEF";              COMMENT "SYDEF (adrdeb, adrlim (,C)) : sans option, donne les adresses de la table des symboles Globaux, sinon déplace cette table en adrdeb et fixe sa limite à      ardlim. L'option C permet de recopier à partir de adrdeb les symboles globaux  existants, sinon la table sera vide"; };
+LABEL { ADDR $E090; NAME "Eval2Words";         COMMENT "Evalue 2 mots séparés par une virgule"; };
+
+
+############################################################
+# Page E1
+############################################################
 LABEL { ADDR $E15F; NAME "SYTAB";             COMMENT "(L)SYTAB (,L) (,G) (,M) : liste la table des symboles (L)ocaux, (G)lobaux ou  (M)oniteur par ordre alphabétique. Par défaut seule la table (G)lobale est     affichée"; };
 LABEL { ADDR $E162; NAME "LSYTAB"; };
-LABEL { ADDR $E7E8; NAME "MODIF";             COMMENT "MODIF adrdeb (,B val) : modification pleine page de la mémoire à partir de    l'adresse adrdeb de la banque indiquée ou celle par défaut"; };
 LABEL { ADDR $E1D0; NAME "QDEC";              COMMENT "?DEC val | ?DEC (adr) : conversion de val ou du contenu de adr en décimal"; };
 LABEL { ADDR $E1FC; NAME "QHEX";              COMMENT "?HEX val | ?HEX (adr) : conversion de val ou du contenu de adr en hexadécimal"; };
 LABEL { ADDR $E1DF; NAME "QBIN";              COMMENT "?BIN val | ?BIN (adr) : conversion de val ou du contenu de adr en binaire"; };
+
+
+############################################################
+# Page E2
+############################################################
 LABEL { ADDR $E219; NAME "QCAR";              COMMENT "?CAR val | ?CAR (adr) : conversion de val ou du contenu de adr en caractère   ASCII"; };
 LABEL { ADDR $E258; NAME "VREG";              COMMENT "VREG (,A val) (,Y val) (,X val) (,P val) : affiche ou modifie le contenu des  registres du 6502"; };
 LABEL { ADDR $E26E; NAME "EvalSetReg";        COMMENT "Evalue une affectation pour un registre (A,X,Y,P), sortie: C=1 -> Ok"; };
-LABEL { ADDR $EA15; NAME "TRACE";             COMMENT "TRACE adrdeb (,S adrstop) (,E) (,H) (,N) (,A val) (...) (,B val) : exécute    une routine en mode trace"; };
+LABEL { ADDR $E2A2; NAME "OLD";               COMMENT "OLD : réactive le programme source en mémoire (après un NEW)"; };
+LABEL { ADDR $E2E3; NAME "CALL";              COMMENT "CALL adrdeb (B val) (,A val) (,Y val) (,X val) (P val) : exécute la routine   adrdeb de la banque indiquée, ou de celle par défaut, en pré-chargeant         éventuellement les registres du 6502. Les registres peuvent aussi être         pré-chargés par la commande VREG"; };
+
+
+############################################################
+# Page E3
+############################################################
+LABEL { ADDR $E334; NAME "BYTES";             COMMENT "BYTES adrdeb ,val1 (,val2...) : place les valeurs val1,... en mémoire à       partir de l'adresse adrdeb. Les valeurs sur 2 octets sont stockées en mode LSB,MSB (COMMANDE NON DOCUMENTEE)"; };
+
+LABEL { ADDR $E365; NAME "SLIGNE";            COMMENT "SLIGNE : effectue un saut de ligne à chaque appui sur <RETURN>, autre touche  arrête le processus"; };
+LABEL { ADDR $E37E; NAME "DPAGE";             COMMENT "DPAGE : effectue un saut de page"; };
+LABEL { ADDR $E38D; NAME "FPAGE";             COMMENT "FPAGE (LPRFY) (,LPRSY) : affiche ou initialise le nombre de lignes par page   (LPRFY) et le n° de ligne pour le saut de page (LPRSY)"; };
+
+
+############################################################
+# Page E4
+############################################################
 LABEL { ADDR $E40A; NAME "MOVE";              COMMENT "MOVE adrdeb ,adrfin (, B val1) , adrcib (, B val2) : déplace un bloc mémoire  de adrdeb inclus à adrfin exclus vers adrcib. Si pas de banque précisée:       banque par défaut"; };
-LABEL { ADDR $D758; NAME "DELBAK";            COMMENT "DELBAK : détruit tous les fichiers avec une extension '.BAK'"; };
-LABEL { ADDR $D63D; NAME "DELETE";            COMMENT "DELETE (numdeb) (-) (numfin) : supprime les lignes numdeb à numfin. numdeb et  numfin peuvent être des n° de ligne en décimal ou des étiquettes"; };
-LABEL { ADDR $D73A; NAME "DEL";               COMMENT "DEL ''NFA'' : détruit un fichier (cf Stratsed)"; };
+
+
+############################################################
+# Page E5
+############################################################
 LABEL { ADDR $E50A; NAME "MERGE";             COMMENT "MERGE ''NF'' : ajoute le fichier source ''NF'' à la suite du programme en     mémoire et renumérote les lignes"; };
+LABEL { ADDR $E554; NAME "QWERTY";            COMMENT "QWERTY : idem BASIC"; };
+LABEL { ADDR $E557; NAME "AZERTY";            COMMENT "AZERTY : idem BASIC"; };
+LABEL { ADDR $E55A; NAME "FRENCH";            COMMENT "FRENCH : idem BASIC"; };
+LABEL { ADDR $E55D; NAME "ACCSET";            COMMENT "ACCSET : idem BASIC"; };
+LABEL { ADDR $E560; NAME "ACCOFF";            COMMENT "ACCOFF : idem BASIC"; };
+LABEL { ADDR $EB5F; NAME "TraceBranch";       COMMENT "Trace une instruction Bxx. Met à jour le PC virtuel. Sortie de Proc2: C=1 -> test vrai."; };
 
-LABEL { ADDR $E9E8; NAME "Scr0InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 0"; };
-LABEL { ADDR $E9EE; NAME "Scr1InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 1"; };
-LABEL { ADDR $E9F4; NAME "Scr2InitTbl";  SIZE 6; COMMENT "Table d'initialisation écran 2"; };
-LABEL { ADDR $E9FA; NAME "Scr0bInitTbl"; SIZE 6; COMMENT "Table d'initialisation écran 0 bis"; };
-LABEL { ADDR $EA00; NAME "Table1";       SIZE 3; COMMENT "Trouver un meilleur nom"; };
 
+############################################################
+# Page E7
+############################################################
+LABEL { ADDR $E7E8; NAME "MODIF";             COMMENT "MODIF adrdeb (,B val) : modification pleine page de la mémoire à partir de    l'adresse adrdeb de la banque indiquée ou celle par défaut"; };
+
+
+############################################################
+# Page E9
+############################################################
+LABEL { ADDR $E9E8; SIZE 6; NAME "Scr0InitTbl";  COMMENT "Table d'initialisation écran 0"; };
+RANGE { START $E9EC; END $E9ED; TYPE WordTable; };
+
+LABEL { ADDR $E9EE; SIZE 6; NAME "Scr1InitTbl";  COMMENT "Table d'initialisation écran 1"; };
+RANGE { START $E9F2; END $E9F3; TYPE WordTable; };
+
+LABEL { ADDR $E9F4; SIZE 6; NAME "Scr2InitTbl";  COMMENT "Table d'initialisation écran 2"; };
+RANGE { START $E9F8; END $E9F9; TYPE WordTable; };
+
+LABEL { ADDR $E9FA; SIZE 6; NAME "Scr0bInitTbl"; COMMENT "Table d'initialisation écran 0 bis"; };
+RANGE { START $E9FE; END $E9FF; TYPE WordTable; };
+
+
+############################################################
+# Page EA
+############################################################
+LABEL { ADDR $EA00; SIZE 3; NAME "Table1";       COMMENT "Inutilisé?"; };
+LABEL { ADDR $EA03;         NAME "InitProc2";    COMMENT "Initialise la routine de trace pour les instructions Bxx"; };
+LABEL { ADDR $EA15;         NAME "TRACE";        COMMENT "TRACE adrdeb (,S adrstop) (,E) (,H) (,N) (,A val) (...) (,B val) : exécute    une routine en mode trace"; };
+
+
+############################################################
+# Page EB
+############################################################
 LABEL { ADDR $EB79; NAME "TraceJMP";          COMMENT "Trace instruction JMP"; };
 LABEL { ADDR $EB8E; NAME "TraceJMPind";       COMMENT "Trace instruction JMP ()"; };
 LABEL { ADDR $EBA8; NAME "TraceJSR";          COMMENT "Trace instruction JSR"; };
 LABEL { ADDR $EBC4; NAME "TraceRTI";          COMMENT "Trace instruction RTI"; };
 LABEL { ADDR $EBD8; NAME "TraceRTS";          COMMENT "Trace instruction RTS"; };
 LABEL { ADDR $EBF4; NAME "TracePLA";          COMMENT "Trace instruction PLA"; };
+
+
+############################################################
+# Page EC
+############################################################
 LABEL { ADDR $EC07; NAME "TracePLP";          COMMENT "Trace instruction PLP"; };
 LABEL { ADDR $EC15; NAME "TracePHA";          COMMENT "Trace instruction PHA"; };
 LABEL { ADDR $EC1F; NAME "TracePHP";          COMMENT "Trace instruction PHP"; };
+LABEL { ADDR $EC91; NAME "Disp_Stack";        COMMENT "Affiche le contenu de la pile de $1FF à max(S,$1E3)"; };
+LABEL { ADDR $ECC6; NAME "Disp_BUFTRV";       COMMENT "Affiche le contenu du buffer BUFTRV sur le canal 2"; };
 
+
+############################################################
+# Page ED
+############################################################
+LABEL { ADDR $ED14; NAME "MINAS";             COMMENT "MINAS adrdeb : mini-assembleur ligne par ligne. Fin par saisie d'une ligne    vide"; };
+
+
+############################################################
+# Page EE
+############################################################
 LABEL { ADDR $EE94; NAME "SEEK";              COMMENT "SEEK ''chaine'' (,L) : recherche la chiane entre double-quotes et indique le  nombre d'occurences. Si l'option 'L' est précisée, affiche aussi les lignes    correspondantes"; };
 
+
+############################################################
+# Page EF
+############################################################
 LABEL { ADDR $EF14; NAME "EvalString";        COMMENT "Evalue une chaine entre double quotes"; };
-
 LABEL { ADDR $EF4A; NAME "CHANGE";            COMMENT "CHANGE ''chaine1'',''chaine2'' : remplace toutes les occurences de chaine1    par chaine2. Les chaines peuvent contenir des double-quotes"; };
-LABEL { ADDR $E2A2; NAME "OLD";               COMMENT "OLD : réactive le programme source en mémoire (après un NEW)"; };
-LABEL { ADDR $D135; NAME "NEW" ;              COMMENT "NEW : efface le programme source en mémoire"; };
-LABEL { ADDR $D32C; NAME "BANK";              COMMENT "BANK (val) : sélectionne la banque par défaut (0 à 7, 0 par défaut)"; };
-LABEL { ADDR $E2E3; NAME "CALL";              COMMENT "CALL adrdeb (B val) (,A val) (,Y val) (,X val) (P val) : exécute la routine   adrdeb de la banque indiquée, ou de celle par défaut, en pré-chargeant         éventuellement les registres du 6502. Les registres peuvent aussi être         pré-chargés par la commande VREG"; };
-LABEL { ADDR $D765; NAME "EXT";               COMMENT "EXT (''ext'') : affiche ou modifie l'extension par défaut (3 caractères maxi)"; };
 
-LABEL { ADDR $E334; NAME "BYTES";             COMMENT "BYTES adrdeb ,val1 (,val2...) : place les valeurs val1,... en mémoire à       partir de l'adresse adrdeb. Les valeurs sur 2 octets sont stockées en mode LSB,MSB (COMMANDE NON DOCUMENTEE)"; };
 
-LABEL { ADDR $ED14; NAME "MINAS";             COMMENT "MINAS adrdeb : mini-assembleur ligne par ligne. Fin par saisie d'une ligne    vide"; };
-LABEL { ADDR $D7C1; NAME "BACKUP";            COMMENT "BACKUP : copie l'intégralité de la disquette (cf Stratsed)"; };
-LABEL { ADDR $D7DB; NAME "INIT";              COMMENT "INIT : initialise et formatte une disquette (cf Stratsed)" ; };
-LABEL { ADDR $E37E; NAME "DPAGE";             COMMENT "DPAGE : effectue un saut de page"; };
-LABEL { ADDR $E38D; NAME "FPAGE";             COMMENT "FPAGE (LPRFY) (,LPRSY) : affiche ou initialise le nombre de lignes par page   (LPRFY) et le n° de ligne pour le saut de page (LPRSY)"; };
-LABEL { ADDR $E365; NAME "SLIGNE";            COMMENT "SLIGNE : effectue un saut de ligne à chaque appui sur <RETURN>, autre touche  arrête le processus"; };
-LABEL { ADDR $E554; NAME "QWERTY";            COMMENT "QWERTY : idem BASIC"; };
-LABEL { ADDR $E557; NAME "AZERTY";            COMMENT "AZERTY : idem BASIC"; };
-LABEL { ADDR $E55A; NAME "FRENCH";            COMMENT "FRENCH : idem BASIC"; };
-LABEL { ADDR $E55D; NAME "ACCSET";            COMMENT "ACCSET : idem BASIC"; };
-LABEL { ADDR $E560; NAME "ACCOFF";            COMMENT "ACCOFF : idem BASIC"; };
-
+############################################################
+# Page F0
+############################################################
 LABEL { ADDR $F005; NAME "TEXT";              COMMENT "TEXT : passe en mode TEXT (COMMANDE NON DOCUMENTEE)"; };
 LABEL { ADDR $F00D; NAME "HIRES";             COMMENT "HIRES : passe en mode HIRES  (COMMANDE NON DOCUMENTEE)"; };
 
 
 
 
+############################################################
+# Tables
+############################################################
+
+RANGE { START $c003; END $c0aa; TYPE TextTable; NAME "MnemonicsTable"; COMMENT "Mnemonics table"; };
+RANGE { START $c0ab; END $c0c5; TYPE TextTable; NAME "PseudoOps";      COMMENT "Pseudo Operations"; };
+
+RANGE { START $c0c6; END $c1c5; TYPE ByteTable; NAME "Oplen";          COMMENT "Oplen: 0-> code invalide, xxxx xxnn: nn->nombre d'octets de l'instruction"; };
+# Oplen: abcc ccnn: nn->longueur de l'instruction, cccc->
+# $C1 -> %11 0000 01 Mode Absolu ou relatif -> $
+#
+# b7: Mode Immediat -> #
+# b6: Mode Indirect -> (
+#
+# b5: Mode Indirect -> )
+# b4: Mode Indexé -> ,X
+# b3: Mode Indexé -> ,Y
+# b2: Mode Indirect Indexé -> )
+#
+# b0-b1: Longueur de l'instruction
+
+RANGE { START $c1c6; END $c2c5; TYPE ByteTable; NAME "Opmode";         COMMENT "Opmode: 0nnn nnnn -> N° du mnemonique, *3 -> offset dans la table Mnemonics"; };
+RANGE { START $c2c6; END $c3c6; TYPE TextTable; NAME "CommandsTable";  COMMENT "Commands"; };
+RANGE { START $c3c7; END $c432; TYPE RTSTable;  NAME "CommandsAddr";   COMMENT "Commands Addresses"; };
+
+RANGE { START $c433; END $c62a; TYPE TextTable; NAME "ErrMsgs";        COMMENT "Error Messages"; };
+RANGE { START $c62b; END $c715; TYPE TextTable;                        COMMENT "Status Messages"; };
+
 ##############
 # Symbols table
 ##############
 #RANGE { START $f018; END $ffc8; TYPE TextTable; NAME "Labels"; COMMENT "Labels"; };
-LABEL { ADDR $F018; NAME "SymbolTable"; };
+LABEL { ADDR $F018; NAME "MonitorTable"; };
 
 RANGE { START $F018; END $F01D; TYPE TextTable; };
 RANGE { START $F01E; END $F01F; TYPE WordTable; };
